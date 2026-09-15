@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "products" ALTER COLUMN "uuid" DROP DEFAULT,
+ALTER COLUMN "updated_at" DROP DEFAULT;

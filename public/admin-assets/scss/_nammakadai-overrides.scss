@@ -1,0 +1,304 @@
+/* NammaKadai-specific glue while preserving the admin template UI */
+.admin-brand-link {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.admin-brand-link img {
+  width: 52px !important;
+  height: 52px !important;
+  object-fit: contain;
+}
+.admin-brand-name {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  white-space: nowrap;
+}
+.sidebar-wrapper.close_icon .admin-brand-name { display: none; }
+.sidebar-wrapper.close_icon:hover .admin-brand-name { display: inline; }
+.admin-header-logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #222;
+  font-weight: 700;
+}
+.admin-header-logo img { width: 34px; height: 34px; object-fit: contain; }
+.admin-profile-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--theme-color);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.admin-profile-dropdown button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  color: #555;
+  text-align: left;
+}
+.admin-profile-dropdown button:hover { color: var(--theme-color); }
+.admin-login-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.admin-login-brand img { width: 62px; height: 62px; object-fit: contain; }
+.admin-login-brand span { font-size: 24px; font-weight: 700; color: #202020; }
+.admin-auth-message {
+  padding: 10px 12px;
+  margin-bottom: 18px;
+  font-size: 13px;
+  border: 1px solid #ffc9c9;
+  background: #fff4f4;
+  color: #a52b2b;
+}
+.admin-search-static { cursor: default; }
+.admin-category-actions { margin-left: auto; display: flex; gap: 8px; }
+.admin-category-actions button {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: #707070;
+}
+.admin-category-actions button:hover { color: var(--theme-color); }
+.admin-category-actions button.delete:hover { color: #dc3545; }
+.admin-category-row.disabled { opacity: .55; }
+.admin-category-row .category-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #adb5bd;
+  display: inline-block;
+}
+.admin-category-row .category-status-dot.active { background: #0da487; }
+.admin-empty-category {
+  text-align: center;
+  padding: 34px 10px;
+  color: #777;
+}
+.admin-empty-category svg { font-size: 42px; margin-bottom: 10px; color: #aaa; }
+.admin-form-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+.admin-dashboard-welcome .card { overflow: hidden; }
+.admin-dashboard-welcome .card > img { width: 100%; height: 162px; object-fit: cover; }
+.admin-dashboard-welcome .card-body { position: absolute; inset: 0; color: white; padding: 28px; }
+.admin-dashboard-welcome .card-body h2 { color: white; }
+.admin-dashboard-welcome .card-body p { color: rgba(255,255,255,.88); max-width: 430px; }
+.admin-metric-card { min-height: 120px; }
+.admin-metric-card h6 { color: #777; margin-bottom: 10px; }
+.admin-metric-card h2 { margin-bottom: 0; }
+.admin-dashboard-title { margin-bottom: 20px; font-weight: 600; }
+.admin-content-loading { padding: 30px; text-align: center; color: #777; }
+.admin-mobile-close { display: none; }
+@media (max-width: 991px) {
+  .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper.admin-mobile-open { left: 0; }
+  .page-wrapper.compact-wrapper .page-header { margin-left: 0; width: 100%; }
+  .page-wrapper.compact-wrapper .page-body-wrapper .page-body { margin-left: 0; }
+  .admin-mobile-close { display: inline-flex; }
+}
+@media (max-width: 991px) {
+  .page-wrapper.compact-wrapper .page-header .header-wrapper .toggle-sidebar {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-right: 12px;
+  }
+}
+
+/* Category images + subcategory tree */
+.admin-tree-root-title { display: flex; align-items: center; gap: 7px; font-weight: 600; }
+.admin-category-row { display: flex; align-items: center; gap: 8px; min-height: 38px; }
+.admin-category-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-category-thumb {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid #ececec;
+  flex: 0 0 34px;
+}
+.admin-category-thumb-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f8f8;
+  color: #aaa;
+  font-size: 17px;
+}
+.admin-subcategory-list { margin: 4px 0 8px 28px; padding-left: 18px; border-left: 1px dashed #d8d8d8; }
+.admin-subcategory-item { position: relative; }
+.admin-subcategory-item::before {
+  content: "";
+  width: 13px;
+  border-top: 1px dashed #d8d8d8;
+  position: absolute;
+  left: -18px;
+  top: 19px;
+}
+.admin-category-image-preview {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 14px;
+}
+.admin-category-image-preview img {
+  width: 130px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e6e6e6;
+}
+.admin-category-image-empty {
+  width: 130px;
+  height: 90px;
+  margin-top: 14px;
+  border: 1px dashed #d5d5d5;
+  border-radius: 8px;
+  color: #999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 12px;
+}
+.admin-category-image-empty svg { font-size: 24px; }
+
+
+/* Product management */
+.admin-category-product-link {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+.admin-category-product-link:hover { color: var(--theme-color); }
+.admin-product-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.admin-product-title-row .btn { display: inline-flex; align-items: center; gap: 6px; }
+.admin-clear-filter { display: inline-block; margin-top: 5px; font-size: 12px; color: var(--theme-color); }
+.admin-product-cell { display: flex; align-items: center; gap: 10px; min-width: 190px; }
+.admin-product-cell img { width: 54px; height: 54px; border-radius: 7px; object-fit: cover; border: 1px solid #ececec; }
+.admin-product-cell span { font-weight: 500; }
+.admin-product-actions { display: flex; gap: 6px; }
+.admin-product-actions button {
+  width: 30px; height: 30px; border: 0; background: transparent; color: #707070;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.admin-product-actions button:hover { color: var(--theme-color); }
+.admin-product-actions button.delete:hover { color: #dc3545; }
+.admin-product-form-card { position: sticky; top: 95px; }
+.admin-status-line { display: flex; align-items: center; gap: 12px; }
+@media (max-width: 1199px) { .admin-product-form-card { position: static; } }
+
+/* Multi-image product uploader */
+.admin-product-image-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.admin-product-image-heading > span {
+  font-size: 12px;
+  color: #777;
+}
+.admin-product-image-upload {
+  min-height: 74px;
+  border: 1px dashed #d7d7d7;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  color: #555;
+  transition: border-color .2s ease, color .2s ease, background .2s ease;
+}
+.admin-product-image-upload:hover {
+  border-color: var(--theme-color);
+  color: var(--theme-color);
+  background: #fff;
+}
+.admin-product-image-upload svg { font-size: 22px; }
+.admin-product-image-upload input { display: none; }
+.admin-product-image-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+.admin-product-image-item {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border: 1px solid #e7e7e7;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+.admin-product-image-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.admin-product-image-item .remove-image {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(25, 25, 25, .78);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.admin-product-image-item .new-badge {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #198754;
+  color: #fff;
+  font-size: 10px;
+  line-height: 1.4;
+}
+.admin-product-image-item.is-removed img {
+  opacity: .25;
+  filter: grayscale(1);
+}
+.admin-product-image-item .restore-image {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(255, 255, 255, .35);
+  color: var(--theme-color);
+  font-weight: 600;
+}
+@media (max-width: 575px) {
+  .admin-product-image-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
