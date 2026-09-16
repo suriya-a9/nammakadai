@@ -19,3 +19,27 @@
 @import "./style.scss";
 
 @import "./nammakadai-overrides";
+
+
+/* NammaKadai admin global typography */
+html,
+body,
+button,
+input,
+textarea,
+select,
+option,
+label,
+table,
+th,
+td {
+  font-family: "Cinzel", serif;
+}
+
+body {
+  h1, h2, h3, h4, h5, h6,
+  p, a, li, button, input, textarea, select, option, label,
+  .btn, .form-control, .form-select, .dropdown-item, .nav-link {
+    font-family: "Cinzel", serif !important;
+  }
+}

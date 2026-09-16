@@ -8,13 +8,14 @@ import CollectionLeftSidebar from "../collection/collectionLeftSidebar";
 
 const CategoryMainPage = ({ slug }) => {
   const { isLoading } = useContext(ThemeOptionContext);
-  const [filter, setFilter] = useState({ category: [slug], brand: [], price: [], attribute: [], rating: [], page: 1, sortBy: "asc", field: "created_at" });
-  const [brand, attribute, price, rating, sortBy, field, layout, page] = useCustomSearchParams(["brand", "attribute", "price", "rating", "sortBy", "field", "layout", "page"]);
+  const [filter, setFilter] = useState({ category: [], brand: [], price: [], attribute: [], rating: [], page: 1, sortBy: "asc", field: "created_at" });
+  const [category, brand, attribute, price, rating, sortBy, field, layout, page] = useCustomSearchParams(["category", "brand", "attribute", "price", "rating", "sortBy", "field", "layout", "page"]);
   useEffect(() => {
     setFilter((prev) => {
       return {
         ...prev,
         page: page ? page?.page : 1,
+        category: category ? category?.category?.split(",").filter(Boolean) : [],
         brand: brand ? brand?.brand?.split(",") : [],
         attribute: attribute ? attribute?.attribute?.split(",") : [],
         price: price ? price?.price?.split(",") : [],
@@ -23,7 +24,7 @@ const CategoryMainPage = ({ slug }) => {
         field: field ? field?.field : "created_at",
       };
     });
-  }, [brand, attribute, price, rating, sortBy, field, page]);
+  }, [category, brand, attribute, price, rating, sortBy, field, page]);
 
   const { categoryIsLoading, filterCategory } = useContext(CategoryContext);
   const allCategories = filterCategory("product");
@@ -41,7 +42,7 @@ const CategoryMainPage = ({ slug }) => {
   return (
     <>
       <Breadcrumbs title={`Category: ${categoryName}`} subNavigation={[{ name: categoryName }]} />
-      <CollectionLeftSidebar filter={filter} setFilter={setFilter} hideCategory categorySlug={slug} />
+      <CollectionLeftSidebar filter={filter} setFilter={setFilter} categorySlug={slug} />
     </>
   );
 };

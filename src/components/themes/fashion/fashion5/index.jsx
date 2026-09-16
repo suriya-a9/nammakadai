@@ -10,6 +10,7 @@ import Loader from "@/layout/loader";
 import useCustomDataQuery from "@/utils/hooks/useCustomDataQuery";
 import { useSkeletonLoader2 } from "@/utils/hooks/useSkeleton2";
 import React, { useContext, useEffect, useState } from "react";
+import Link from "next/link";
 import HomeBrand from "../../widgets/HomeBrand";
 import HomeCategorySidebar from "../../widgets/HomeCategorySidebar";
 import HomeProductTab from "../../widgets/HomeProductTab";
@@ -116,8 +117,13 @@ const Fashion5 = ({ slug }) => {
       {/* Product Categories */}
       {data?.categories?.status && (
         <WrapperComponent classes={{ sectionClass: "", fluidClass: "container" }} noRowCol={true}>
-          <HomeTitle title={data?.categories} type="classic" />
-          <HomeCategorySidebar style={"basic"} categoryIds={data?.categories?.category_ids || []} />
+          <div className="nk-shop-category-heading">
+            <HomeTitle title={data?.categories} type="classic" />
+            <Link href="/collections" className="nk-shop-category-see-all">
+              See All
+            </Link>
+          </div>
+          <HomeCategorySidebar style="fashion_five_cards" limit={4} categoryIds={[]} />
         </WrapperComponent>
       )}
 
@@ -156,6 +162,7 @@ const Fashion5 = ({ slug }) => {
           <ImageLink imgUrl={data?.offer_banner} classes="'full-banner custom-space p-right text-end'" width={1376} height={409} />
         </WrapperComponent>
       )}
+
 
       {/* Social Media */}
       {data?.social_media?.banners?.length && data?.social_media?.status && (

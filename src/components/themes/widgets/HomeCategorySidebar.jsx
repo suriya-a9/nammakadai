@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import Slider from "react-slick";
 import { Col, Row } from "reactstrap";
 
-const HomeCategorySidebar = ({ categoryIds, height, width, style, slider, sliderOptions }) => {
+const HomeCategorySidebar = ({ categoryIds, height, width, style, slider, sliderOptions, limit, offset = 0 }) => {
   const { t } = useTranslation("common");
   const { filterCategory } = useContext(CategoryContext);
   const categoryData = filterCategory("product");
@@ -36,9 +36,18 @@ const HomeCategorySidebar = ({ categoryIds, height, width, style, slider, slider
   };
 
   const filteredCategories = filterCategoryData(categoryData, categoryIds);
-  // Fashion Five previously referenced mock category IDs from category.json.
-  // When those IDs do not exist in PostgreSQL, show the first active root categories instead.
-  const mainCategories = filteredCategories?.length ? filteredCategories : categoryData?.slice(0, 6) || [];
+  const isFashionFiveCategoryStyle = style === "fashion_five_cards";
+
+  // Fashion Five Shop By Category uses the live PostgreSQL root-category order.
+  const availableCategories = isFashionFiveCategoryStyle
+    ? categoryData || []
+    : filteredCategories?.length
+      ? filteredCategories
+      : categoryData?.slice(0, 6) || [];
+  const startIndex = Math.max(Number(offset) || 0, 0);
+  const mainCategories = limit
+    ? availableCategories.slice(startIndex, startIndex + limit)
+    : availableCategories.slice(startIndex);
 
   const categorySliderSettingMain = sliderOptions && sliderOptions(mainCategories?.length);
 
@@ -125,10 +134,10 @@ const HomeCategorySidebar = ({ categoryIds, height, width, style, slider, slider
                       <ul className="category-link">
                         {category?.subcategories
                           ? category?.subcategories?.slice(0, 5)?.map((sub) => (
-                              <li>
-                                <Link href={`/category/${sub?.slug}`}>{sub?.name}</Link>
-                              </li>
-                            ))
+                            <li>
+                              <Link href={`/category/${sub?.slug}`}>{sub?.name}</Link>
+                            </li>
+                          ))
                           : ""}
                       </ul>
                       <a className="btn btn-classic btn-outline" href={`/category/${category?.slug}`}>
@@ -288,6 +297,29 @@ const HomeCategorySidebar = ({ categoryIds, height, width, style, slider, slider
               )}
             </Row>
           )}
+
+          {style === "fashion_five_cards" && (
+            <Row className="nk-home-category-grid g-3 g-md-4">
+              {mainCategories?.map((category, index) => {
+                const imageUrl = category?.category_image?.original_url || `${ImagePath}/placeholder/category.png`;
+
+                return (
+                  <Col lg="3" md="6" xs="6" key={category?.id || category?.uuid || index}>
+                    <Link href={`/category/${category?.slug}`} className="nk-home-category-card">
+                      <div className="nk-home-category-image">
+                        <img src={imageUrl} alt={category?.name || "Category"} />
+                      </div>
+                      <div className="nk-home-category-label">
+                        <span>{category?.name}</span>
+                      </div>
+                    </Link>
+                  </Col>
+                );
+              })}
+            </Row>
+          )}
+
+
           {style === "basic" && (
             <Row className="g-sm-4 g-3 ratio_square">
               {!slider ? (

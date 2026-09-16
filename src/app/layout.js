@@ -37,7 +37,8 @@ export default async function RootLayout({ children }) {
     <I18nProvider language={lng}>
       <html lang="en" data-scroll-behavior="smooth">
         <head>
-          {/* Google Fonts */}
+          {/* Global font */}
+          <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
           <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
           <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
           <link rel="preconnect" href="https://fonts.gstatic.com" />

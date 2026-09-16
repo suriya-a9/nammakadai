@@ -1,6 +1,7 @@
+import CategoryContext from "@/context/categoryContext";
 import { useCustomSearchParams } from "@/utils/hooks/useCustomSearchParams";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RiCloseLine } from "react-icons/ri";
 
@@ -10,6 +11,20 @@ const CollectionFilter = ({ filter, setFilter, categorySlug }) => {
   const { t } = useTranslation("common");
   const [selectedFilters, setSelectedFilters] = useState([]);
   const pathname = usePathname();
+  const { filterCategory } = useContext(CategoryContext);
+
+  const categoryNameByValue = (value) => {
+    const findCategory = (items = []) => {
+      for (const item of items) {
+        if (item?.slug === value || item?.uuid === value || item?.id === value) return item?.name;
+        const childName = findCategory(item?.subcategories || []);
+        if (childName) return childName;
+      }
+      return null;
+    };
+
+    return findCategory(filterCategory("product"));
+  };
 
   const splitFilter = (filterKey) => {
     return filter && filter[filterKey] ? filter[filterKey] : [];
@@ -58,6 +73,9 @@ const CollectionFilter = ({ filter, setFilter, categorySlug }) => {
   };
 
   const ModifyWord = (value) => {
+    const categoryName = categoryNameByValue(value);
+    if (categoryName) return categoryName;
+
     return value
       .split(/[-_]/)
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))

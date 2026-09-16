@@ -76,7 +76,7 @@ const CollectionSidebar = ({ filter, setFilter, isOffcanvas, basicStoreCard, rig
                       <AccordionHeader targetId="1" className="collapse-block-title">
                         <span>{t("Categories")}</span>
                       </AccordionHeader>
-                      <CollectionCategory filter={filter} setFilter={setFilter} />
+                      <CollectionCategory filter={filter} setFilter={setFilter} categorySlug={categorySlug} />
                     </AccordionItem>
                   )}
                   <AccordionItem className={`collection-collapse-block open ${isOffcanvas ? "col-lg-3" : ""}`}>

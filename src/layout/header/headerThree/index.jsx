@@ -26,10 +26,9 @@ const HeaderThree = () => {
   };
   const UpScroll = useHeaderScroll(false);
 
-  const headerCategoryNames = ["College Uniforms", "Corporate Uniforms", "Costumes", "Medical Uniforms"];
-  const mainCategories = headerCategoryNames
-    .map((name) => categoryAPIData?.data?.find((category) => category.name?.trim().toLowerCase() === name.toLowerCase()))
-    .filter(Boolean);
+  // Desktop header intentionally shows only the first three active main categories.
+  // The mobile drawer still exposes the complete category tree.
+  const mainCategories = (categoryAPIData?.data || []).slice(0, 3);
 
   const handleWishlistClick = () => {
     isAuthenticated ? router.push("/wishlist") : setOpenAuthModal(true);

@@ -6,12 +6,24 @@ import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AccordionBody, Input, Label } from "reactstrap";
 
-const CollectionCategory = ({ filter, setFilter }) => {
+const CollectionCategory = ({ filter, setFilter, categorySlug }) => {
   const [brand, attribute, price, rating, sortBy, field, layout] = useCustomSearchParams(["brand", "attribute", "price", "rating", "sortBy", "field", "layout"]);
-  const { filterCategory } = useContext(CategoryContext);
-  const [showList, setShowList] = useState(filterCategory("product"));
+  const { filterCategory, categoryData } = useContext(CategoryContext);
+
+  const getCategoryList = () => {
+    // Always show the complete category tree in the collection sidebar.
+    // categorySlug is still used by the product query as the default filter for
+    // a category page, but it must not hide the other category choices.
+    return filterCategory("product");
+  };
+
+  const [showList, setShowList] = useState(getCategoryList());
   const [state, setState] = useState(false);
   const { t } = useTranslation("common");
+
+  useEffect(() => {
+    setShowList(getCategoryList());
+  }, [categorySlug, categoryData]);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -45,12 +57,12 @@ const CollectionCategory = ({ filter, setFilter }) => {
     setState(!state);
     const keyword = event.target.value.toLowerCase();
     if (keyword !== "") {
-      const updatedData = filterCategory("product")
+      const updatedData = getCategoryList()
         ?.map((item) => filterCategories(item, keyword))
         .filter((item) => item);
       setShowList(updatedData);
     } else {
-      setShowList(filterCategory("product"));
+      setShowList(getCategoryList());
     }
   };
   const redirectToCollection = (event, slug) => {
@@ -78,7 +90,7 @@ const CollectionCategory = ({ filter, setFilter }) => {
   return (
     <div className="accordion-collapse collapse show">
       <AccordionBody accordionId="1">
-        {filterCategory("product").length > 5 && (
+        {getCategoryList().length > 5 && (
           <div className="theme-form search-box">
             <Input placeholder={t("Search")} onChange={handleChange} />
           </div>

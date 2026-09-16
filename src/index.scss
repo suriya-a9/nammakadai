@@ -623,3 +623,175 @@
         }
     }
 }
+
+/* NammaKadai global typography */
+html,
+body,
+button,
+input,
+textarea,
+select,
+option,
+label,
+table,
+th,
+td {
+    font-family: "Cinzel", serif;
+}
+
+body {
+    h1, h2, h3, h4, h5, h6,
+    p, a, li, button, input, textarea, select, option, label,
+    .btn, .form-control, .form-select, .dropdown-item, .nav-link {
+        font-family: "Cinzel", serif !important;
+    }
+}
+
+/* Fashion Five - Shop By Category */
+.nk-home-category-grid {
+    align-items: stretch;
+}
+
+.nk-home-category-card {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    background: #f4f2f1;
+    color: #222;
+}
+
+.nk-home-category-image {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.nk-home-category-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    transition: transform 350ms ease;
+}
+
+.nk-home-category-card:hover .nk-home-category-image img {
+    transform: scale(1.035);
+}
+
+.nk-home-category-label {
+    position: absolute;
+    left: 18%;
+    right: 18%;
+    bottom: 10px;
+    z-index: 2;
+    min-height: 44px;
+    padding: 11px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    text-align: center;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.04);
+}
+
+.nk-home-category-label span {
+    color: #252525;
+    font-family: "Cinzel", serif !important;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.35;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 767px) {
+    .nk-home-category-label {
+        left: 8%;
+        right: 8%;
+        bottom: 8px;
+        min-height: 40px;
+        padding: 8px 6px;
+    }
+
+    .nk-home-category-label span {
+        font-size: 11px;
+        letter-spacing: 0.02em;
+    }
+}
+
+@media (max-width: 420px) {
+    .nk-home-category-grid {
+        --bs-gutter-x: 0.75rem;
+        --bs-gutter-y: 0.75rem;
+    }
+
+    .nk-home-category-label span {
+        font-size: 10px;
+    }
+}
+
+
+/* Shop By Category heading + See All */
+.nk-shop-category-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.nk-shop-category-heading .title2 {
+    flex: 1 1 auto;
+    margin: 0;
+}
+
+.nk-shop-category-heading .title2 .title-inner2 {
+    margin-bottom: 0;
+}
+
+.nk-shop-category-see-all {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 8px 18px;
+    border: 1px solid #8d0d1f;
+    color: #8d0d1f;
+    background: #fff;
+    font-family: "Cinzel", serif !important;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: all 180ms ease;
+}
+
+.nk-shop-category-see-all:hover {
+    color: #fff;
+    background: #8d0d1f;
+}
+
+@media (max-width: 575px) {
+    .nk-shop-category-heading {
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .nk-shop-category-heading .title2 .title-inner2 {
+        font-size: 20px;
+    }
+
+    .nk-shop-category-see-all {
+        min-height: 34px;
+        padding: 7px 10px;
+        font-size: 10px;
+        white-space: nowrap;
+    }
+}

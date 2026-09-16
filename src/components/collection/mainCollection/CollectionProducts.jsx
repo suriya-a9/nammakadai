@@ -32,7 +32,7 @@ const CollectionProducts = ({ filter, grid, infiniteScroll, categorySlug }) => {
         paginate: filter?.paginate ?? filter?.paginate,
         field: filter?.field ?? "created_at",
         price: filter?.price.join(",") ?? "",
-        category: categorySlug ? categorySlug : filter?.category.join(",") || tagParam,
+        category: filter?.category?.length ? filter.category.join(",") : categorySlug || tagParam,
         brand: filter.brand.join(","),
         sort: "",
         sortBy: filter?.sortBy ?? "asc",
