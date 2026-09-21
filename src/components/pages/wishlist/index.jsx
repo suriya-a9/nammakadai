@@ -15,13 +15,13 @@ import { RiCloseLine, RiShoppingCartLine } from "react-icons/ri";
 import { Table } from "reactstrap";
 import emptyImage from "../../../../public/assets/svg/empty-items.svg";
 
-const WishlistContent = () => {
-  const { wishlistProducts, WishlistAPILoading } = useContext(WishlistContext);
+const WishlistContent = ({ embedded = false }) => {
+  const { wishlistProducts, WishlistAPILoading, removeWishlist } = useContext(WishlistContext);
   const { t } = useTranslation("common");
   const { setCartCanvas } = useContext(ThemeOptionContext);
   const { handleIncDec, openCartSidebar } = useContext(CartContext);
   const removeFromWishlist = (product) => {
-    //  Put your logic here
+    void removeWishlist(product?.uuid || product?.id);
   };
   const { convertCurrency } = useContext(SettingContext);
 
@@ -34,8 +34,8 @@ const WishlistContent = () => {
 
   return (
     <>
-      <Breadcrumbs title={"Wishlist"} subNavigation={[{ name: "Wishlist" }]} />
-      <WrapperComponent classes={{ sectionClass: "wishlist-section section-b-space", row: "g-sm-3 g-2", col: "table-responsive-xs", fluidClass: "container" }} colProps={{ sm: "12" }}>
+      {!embedded && <Breadcrumbs title={"Wishlist"} subNavigation={[{ name: "Wishlist" }]} />}
+      <WrapperComponent classes={{ sectionClass: embedded ? "wishlist-section" : "wishlist-section section-b-space", row: "g-sm-3 g-2", col: "table-responsive-xs", fluidClass: "container" }} colProps={{ sm: "12" }}>
         {wishlistProducts?.length > 0 ? (
           <div className="table-responsive">
             <Table className="cart-table">

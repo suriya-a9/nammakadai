@@ -38,6 +38,7 @@ export default function CategoryManager() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [fileInputKey, setFileInputKey] = useState(0);
+  const [formOpen, setFormOpen] = useState(false);
 
   const loadCategories = useCallback(async () => {
     setLoading(true);
@@ -92,12 +93,14 @@ export default function CategoryManager() {
       removeImage: false,
     });
     setFileInputKey((value) => value + 1);
+    setFormOpen(true);
   };
 
   const addSubcategory = (category) => {
     setMessage("");
     setError("");
     resetForm(category.uuid || category.id);
+    setFormOpen(true);
   };
 
   const onImageChange = (event) => {
@@ -167,6 +170,7 @@ export default function CategoryManager() {
             : "Category created successfully"
       );
       resetForm();
+      setFormOpen(false);
       await loadCategories();
     } catch (err) {
       setError(err.message);
@@ -200,229 +204,49 @@ export default function CategoryManager() {
   const currentCategory = form.uuid ? findCategory(form.uuid) : null;
   const hasChildren = Boolean(currentCategory?.subcategories?.length);
 
-  const renderRow = (category, isChild = false) => {
-    const active = isActive(category);
-    const uuid = category.uuid || category.id;
-    const imageUrl = category.image_url || category.category_image?.original_url;
-
-    return (
-      <li key={uuid} className={isChild ? "admin-subcategory-item" : ""}>
-        <div className={`admin-category-row ${!active ? "disabled" : ""}`}>
-          {imageUrl ? (
-            <img className="admin-category-thumb" src={imageUrl} alt={category.name} />
-          ) : (
-            <span className="admin-category-thumb admin-category-thumb-empty"><RiImageLine /></span>
-          )}
-          <span className={`category-status-dot ${active ? "active" : ""}`} />
-          <button type="button" className="admin-category-name admin-category-product-link" title={`View ${category.name} products`} onClick={() => router.push(`/admin/product?category=${uuid}`)}>{category.name}</button>
-          <div className="admin-category-actions tree-options">
-            {!isChild && (
-              <button type="button" title="Add subcategory" onClick={() => addSubcategory(category)}>
-                <RiAddLine />
-              </button>
-            )}
-            <button type="button" title="Edit category" onClick={() => editCategory(category)}>
-              <RiEdit2Line />
-            </button>
-            <button type="button" title="Delete category" className="delete" onClick={() => removeCategory(category)}>
-              <RiDeleteBinLine />
-            </button>
-          </div>
-        </div>
-        {category.subcategories?.length ? (
-          <ul className="admin-subcategory-list">
-            {category.subcategories.map((subcategory) => renderRow(subcategory, true))}
-          </ul>
-        ) : null}
-      </li>
-    );
-  };
+  const flatRows = visibleCategories.flatMap((category) => [
+    { ...category, isChild: false, parentName: "—" },
+    ...(category.subcategories || []).map((sub) => ({ ...sub, isChild: true, parentName: category.name })),
+  ]);
 
   return (
     <div className="card-spacing">
-      {(message || error) && (
-        <div className={`alert ${error ? "alert-danger" : "alert-success"} mb-4`} role="alert">
-          {error || message}
-        </div>
-      )}
-
-      <div className="row">
-        <div className="col-xl-4">
-          <div className="card">
-            <div className="card-body">
-              <div className="title-header option-title">
-                <h5>Categories</h5>
-              </div>
-              <div className="theme-tree-box">
-                <input
-                  className="form-control"
-                  placeholder="Search Category"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                />
-                {loading ? (
-                  <div className="admin-content-loading">Loading categories...</div>
-                ) : visibleCategories.length ? (
-                  <ul className="tree-main-ul">
-                    <li>
-                      <div className="admin-tree-root-title">
-                        <i className="tree-icon folder-icon cursor" role="presentation" />
-                        Category
-                      </div>
-                      <ul className="child-tree-list mt-2">
-                        {visibleCategories.map((category) => renderRow(category))}
-                      </ul>
-                    </li>
-                  </ul>
-                ) : (
-                  <div className="admin-empty-category"><RiFolderLine /><div>No categories found</div></div>
-                )}
-              </div>
-            </div>
+      {(message || error) && <div className={`alert ${error ? "alert-danger" : "alert-success"} mb-4`}>{error || message}</div>}
+      <div className="card">
+        <div className="card-body">
+          <div className="title-header option-title admin-product-title-row">
+            <div><h5>Categories</h5><small>Manage categories and subcategories</small></div>
+            <button className="btn btn-primary btn-sm" type="button" onClick={() => { resetForm(); setFormOpen(true); }}><RiAddLine /> Add Category</button>
           </div>
-        </div>
-
-        <div className="col-xl-8">
-          <div className="card">
-            <div className="card-body">
-              <div className="title-header option-title">
-                <h5>
-                  {form.uuid
-                    ? form.parent_uuid
-                      ? "Edit Subcategory"
-                      : "Edit Category"
-                    : form.parent_uuid
-                      ? "Add Subcategory"
-                      : "Add Category"}
-                </h5>
-              </div>
-
-              <form className="theme-form theme-form-2 mega-form" onSubmit={save}>
-                <div className="row">
-                  <div className="input-error">
-                    <div className="mb-4 align-items-center row">
-                      <div className="col-sm-3">
-                        <label htmlFor="category-name" className="col-form-label form-label-title">
-                          Name <span className="theme-color ms-2 required-dot">*</span>
-                        </label>
-                      </div>
-                      <div className="col-sm-9">
-                        <input
-                          id="category-name"
-                          className="form-control"
-                          type="text"
-                          placeholder="Enter Category Name"
-                          value={form.name}
-                          onChange={(event) => setForm((value) => ({ ...value, name: event.target.value }))}
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="input-error">
-                    <div className="mb-4 align-items-center row">
-                      <div className="col-sm-3">
-                        <label htmlFor="parent-category" className="col-form-label form-label-title">Parent Category</label>
-                      </div>
-                      <div className="col-sm-9">
-                        <select
-                          id="parent-category"
-                          className="form-control form-select"
-                          value={form.parent_uuid}
-                          disabled={hasChildren}
-                          onChange={(event) => setForm((value) => ({ ...value, parent_uuid: event.target.value }))}
-                        >
-                          <option value="">None - Main Category</option>
-                          {categories
-                            .filter((category) => (category.uuid || category.id) !== form.uuid)
-                            .map((category) => (
-                              <option key={category.uuid || category.id} value={category.uuid || category.id}>
-                                {category.name}
-                              </option>
-                            ))}
-                        </select>
-                        {hasChildren && <p className="help-text mt-2 mb-0">A category with subcategories must remain a main category.</p>}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="input-error">
-                    <div className="mb-4 align-items-start row">
-                      <div className="col-sm-3">
-                        <label htmlFor="category-image" className="col-form-label form-label-title">Image</label>
-                      </div>
-                      <div className="col-sm-9">
-                        <input
-                          key={fileInputKey}
-                          id="category-image"
-                          className="form-control"
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp,image/gif"
-                          onChange={onImageChange}
-                        />
-                        <p className="help-text mt-2 mb-0">JPG, PNG, WEBP or GIF. Maximum 5 MB.</p>
-
-                        {form.imagePreview ? (
-                          <div className="admin-category-image-preview">
-                            <img src={form.imagePreview} alt="Category preview" />
-                            <button type="button" className="btn btn-sm btn-outline-danger" onClick={removeSelectedImage}>
-                              Remove image
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="admin-category-image-empty"><RiImageLine /><span>No image selected</span></div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="input-error">
-                    <div className="mb-4 align-items-center row">
-                      <div className="col-sm-3">
-                        <label className="col-form-label form-label-title">Status</label>
-                      </div>
-                      <div className="col-sm-9">
-                        <div className="form-switch custom-switch-flex form-check ps-0">
-                          <label className="switch">
-                            <input
-                              type="checkbox"
-                              checked={form.status}
-                              onChange={(event) => setForm((value) => ({ ...value, status: event.target.checked }))}
-                            />
-                            <span className="switch-state" />
-                          </label>
-                          <p className="help-text mb-0">{form.status ? "Active" : "Inactive"}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {form.uuid && (
-                    <div className="input-error">
-                      <div className="mb-4 align-items-center row">
-                        <div className="col-sm-3"><label className="col-form-label form-label-title">UUID</label></div>
-                        <div className="col-sm-9"><input className="form-control" value={form.uuid} readOnly /></div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="admin-form-buttons">
-                    {(form.uuid || form.parent_uuid) && (
-                      <button className="btn btn-outline-secondary" type="button" onClick={() => resetForm()}>
-                        Cancel
-                      </button>
-                    )}
-                    <button className="btn btn-primary" type="submit" disabled={saving}>
-                      {saving ? "Saving..." : form.uuid ? "Update" : "Save"}
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </div>
-          </div>
+          <div className="mb-3"><input className="form-control" placeholder="Search categories" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
+          {loading ? <div className="admin-content-loading">Loading categories...</div> : flatRows.length ? (
+            <div className="table-responsive"><table className="table all-package theme-table align-middle admin-list-table">
+              <thead><tr><th>Category</th><th>Type</th><th>Parent</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody>{flatRows.map((category) => { const uuid=category.uuid||category.id; const active=isActive(category); const imageUrl=category.image_url||category.category_image?.original_url; return (
+                <tr key={uuid}>
+                  <td><div className="admin-product-cell">{imageUrl?<img src={imageUrl} alt={category.name}/>:<span className="admin-category-thumb admin-category-thumb-empty"><RiImageLine/></span>}<button type="button" className="admin-category-product-link fw-medium" onClick={()=>router.push(`/admin/product?category=${uuid}`)}>{category.name}</button></div></td>
+                  <td>{category.isChild ? <span className="badge bg-light text-dark">Subcategory</span> : <span className="badge bg-light text-dark">Main</span>}</td>
+                  <td>{category.parentName}</td><td><span className={`badge ${active?"badge-success":"badge-danger"}`}>{active?"Active":"Inactive"}</span></td>
+                  <td><div className="admin-product-actions">{!category.isChild&&<button title="Add subcategory" onClick={()=>addSubcategory(category)}><RiAddLine/></button>}<button title="Edit" onClick={()=>editCategory(category)}><RiEdit2Line/></button><button className="delete" title="Delete" onClick={()=>removeCategory(category)}><RiDeleteBinLine/></button></div></td>
+                </tr>);})}</tbody>
+            </table></div>
+          ) : <div className="admin-empty-category"><RiFolderLine/><div>No categories found</div></div>}
         </div>
       </div>
+
+      <div className={`admin-offcanvas-backdrop ${formOpen ? "show" : ""}`} onClick={()=>setFormOpen(false)} />
+      <aside className={`admin-offcanvas ${formOpen ? "show" : ""}`} aria-hidden={!formOpen}>
+        <div className="admin-offcanvas-header"><div><small>Category management</small><h5>{form.uuid ? (form.parent_uuid?"Edit Subcategory":"Edit Category") : (form.parent_uuid?"Add Subcategory":"Add Category")}</h5></div><button type="button" onClick={()=>setFormOpen(false)}>×</button></div>
+        <div className="admin-offcanvas-body">
+          <form className="theme-form theme-form-2 mega-form" onSubmit={save}>
+            <div className="mb-4"><label className="form-label-title">Name <span className="text-danger">*</span></label><input className="form-control" value={form.name} onChange={(e)=>setForm(v=>({...v,name:e.target.value}))} required /></div>
+            <div className="mb-4"><label className="form-label-title">Parent Category</label><select className="form-select" value={form.parent_uuid} disabled={hasChildren} onChange={(e)=>setForm(v=>({...v,parent_uuid:e.target.value}))}><option value="">None - Main Category</option>{categories.filter(c=>(c.uuid||c.id)!==form.uuid).map(c=><option key={c.uuid||c.id} value={c.uuid||c.id}>{c.name}</option>)}</select>{hasChildren&&<p className="help-text mt-2">A category with subcategories must remain a main category.</p>}</div>
+            <div className="mb-4"><label className="form-label-title">Image</label><input key={fileInputKey} className="form-control" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={onImageChange}/>{form.imagePreview?<div className="admin-category-image-preview"><img src={form.imagePreview} alt="Category preview"/><button type="button" className="btn btn-sm btn-outline-danger" onClick={removeSelectedImage}>Remove</button></div>:<div className="admin-category-image-empty"><RiImageLine/><span>No image selected</span></div>}</div>
+            <div className="mb-4 admin-status-line"><label className="form-label-title mb-0">Status</label><label className="switch"><input type="checkbox" checked={form.status} onChange={(e)=>setForm(v=>({...v,status:e.target.checked}))}/><span className="switch-state"/></label><span>{form.status?"Active":"Inactive"}</span></div>
+            <div className="admin-form-buttons"><button type="button" className="btn btn-light" onClick={()=>setFormOpen(false)}>Cancel</button><button className="btn btn-primary" disabled={saving}>{saving?"Saving...":form.uuid?"Update Category":"Save Category"}</button></div>
+          </form>
+        </div>
+      </aside>
     </div>
   );
 }

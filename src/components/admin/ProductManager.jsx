@@ -45,6 +45,7 @@ export default function ProductManager() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [fileInputKey, setFileInputKey] = useState(0);
+  const [formOpen, setFormOpen] = useState(false);
 
   const categoryOptions = useMemo(() => flattenCategories(categories), [categories]);
   const selectedCategoryName = categoryOptions.find((item) => item.uuid === categoryFromUrl)?.name;
@@ -117,7 +118,7 @@ export default function ProductManager() {
       removeImageIds: [],
     });
     setFileInputKey((value) => value + 1);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setFormOpen(true);
   };
 
   const onImagesChange = (event) => {
@@ -194,6 +195,7 @@ export default function ProductManager() {
       setMessage(editing ? "Product updated successfully" : "Product created successfully");
       form.newImages.forEach((item) => item.preview?.startsWith("blob:") && URL.revokeObjectURL(item.preview));
       resetForm();
+      setFormOpen(false);
       await loadProducts();
     } catch (err) {
       setError(err.message);
@@ -226,7 +228,7 @@ export default function ProductManager() {
       {(message || error) && <div className={`alert ${error ? "alert-danger" : "alert-success"} mb-4`}>{error || message}</div>}
 
       <div className="row g-4">
-        <div className="col-xl-7">
+        <div className="col-12">
           <div className="card">
             <div className="card-body">
               <div className="title-header option-title admin-product-title-row">
@@ -234,7 +236,7 @@ export default function ProductManager() {
                   <h5>{selectedCategoryName ? `${selectedCategoryName} Products` : "Products"}</h5>
                   {categoryFromUrl ? <a href="/admin/product" className="admin-clear-filter">View all products</a> : null}
                 </div>
-                <button type="button" className="btn btn-outline-primary btn-sm" onClick={loadProducts}><RiRefreshLine /> Refresh</button>
+                <div className="d-flex gap-2"><button type="button" className="btn btn-primary btn-sm" onClick={() => { resetForm(); setFormOpen(true); }}>+ Add Product</button><button type="button" className="btn btn-outline-primary btn-sm" onClick={loadProducts}><RiRefreshLine /> Refresh</button></div>
               </div>
 
               <div className="mb-3">
@@ -276,7 +278,10 @@ export default function ProductManager() {
           </div>
         </div>
 
-        <div className="col-xl-5">
+        <div className={`admin-offcanvas-backdrop ${formOpen ? "show" : ""}`} onClick={() => setFormOpen(false)} />
+        <aside className={`admin-offcanvas ${formOpen ? "show" : ""}`} aria-hidden={!formOpen}>
+          <div className="admin-offcanvas-header"><div><small>Product management</small><h5>{form.uuid ? "Edit Product" : "Add Product"}</h5></div><button type="button" onClick={() => setFormOpen(false)}><RiCloseLine /></button></div>
+          <div className="admin-offcanvas-body">
           <div className="card admin-product-form-card">
             <div className="card-body">
               <div className="title-header option-title"><h5>{form.uuid ? "Edit Product" : "Add Product"}</h5></div>
@@ -351,7 +356,8 @@ export default function ProductManager() {
               </form>
             </div>
           </div>
-        </div>
+          </div>
+        </aside>
       </div>
     </div>
   );

@@ -1,78 +1,64 @@
-import request from "@/utils/axiosUtils";
-import { WishlistAPI } from "@/utils/axiosUtils/API";
-import useCreate from "@/utils/hooks/useCreate";
-import useDelete from "@/utils/hooks/useDelete";
-import useFetchQuery from "@/utils/hooks/useFetchQuery";
-import Cookies from "js-cookie";
-import { useRouter } from "next/navigation";
-import React, { useContext, useEffect, useState } from "react";
-import CartContext from ".";
-import ThemeOptionContext from "../themeOptionsContext";
+"use client";
+import AccountContext from "@/context/accountContext";
+import ThemeOptionContext from "@/context/themeOptionsContext";
+import { ToastNotification } from "@/utils/customFunctions/ToastNotification";
+import React, { useCallback, useContext, useEffect, useState } from "react";
+import WishlistContext from ".";
 
-const WishlistProvider = (props) => {
-  const router = useRouter();
-  const isCookie = Cookies.get("uat");
-  const [wishlistProducts, setWishlistProducts] = useState([]);
+const WishlistProvider = ({ children }) => {
+  const { accountData, authLoading } = useContext(AccountContext);
   const { setOpenAuthModal } = useContext(ThemeOptionContext);
+  const [wishlistProducts, setWishlistProducts] = useState([]);
+  const [WishlistAPILoading, setLoading] = useState(false);
 
-  // Getting data from Wishlist API
-  const { data: WishlistApiData, isLoading: WishlistAPILoading, refetch } = useFetchQuery([WishlistAPI], () => request({ url: WishlistAPI }), { enabled: false, refetchOnWindowFocus: false, select: (res) => res?.data });
+  const refetch = useCallback(async () => {
+    if (!accountData) { setWishlistProducts([]); return; }
+    setLoading(true);
+    try {
+      const res = await fetch("/api/wishlist", { credentials: "same-origin", cache: "no-store" });
+      if (res.status === 401) { setWishlistProducts([]); return; }
+      const json = await res.json();
+      if (res.ok) setWishlistProducts(json?.data || []);
+    } finally { setLoading(false); }
+  }, [accountData]);
 
-  // Adding data to Wishlist API
-  const { mutate, isLoading } = useCreate(WishlistAPI, false, false, "Added to Wishlist List");
+  useEffect(() => { if (!authLoading) void refetch(); }, [authLoading, refetch]);
 
-  // Delete Cart API Data
-  const { mutate: deleteWishlist, isLoading: deleteWishlistLoader } = useDelete(WishlistAPI, false, false, "Product Deleted from Wishlist");
+  const isWishlisted = useCallback((productId) => wishlistProducts.some((p) => p.id === productId || p.uuid === productId), [wishlistProducts]);
 
-  // Refetching Cart API
-  useEffect(() => {
-    if (isCookie && !deleteWishlistLoader) {
-      refetch();
-    }
-  }, [deleteWishlistLoader, isCookie]);
-
-  // Remove and Delete cart data from API and State
-  const removeWishlist = (id, wishId) => {
-    if (isCookie && wishId) {
-      let id = typeof wishId == "object" ? wishId.id : wishId;
-      deleteWishlist(id);
-    }
-  };
-
-  useEffect(() => {
-    if (isCookie) {
-      if (WishlistApiData) {
-        setWishlistProducts(WishlistApiData.data);
-      }
-    }
-  }, [WishlistAPILoading, isCookie, WishlistApiData]);
-
-  // Common Handler for Add to wishlist
-  const addToWishlist = (productObj) => {
-    if (Cookies.get("uat")) {
-      router.push("/wishlist");
-    } else {
+  const addToWishlist = async (productObj) => {
+    if (!accountData) {
       setOpenAuthModal(true);
+      ToastNotification("error", "Please login to use wishlist");
+      return false;
     }
+    const productId = productObj?.uuid || productObj?.id;
+    if (!productId) return false;
+    const alreadyAdded = isWishlisted(productId);
+    const res = await fetch(alreadyAdded ? `/api/wishlist/${productId}` : "/api/wishlist", {
+      method: alreadyAdded ? "DELETE" : "POST",
+      credentials: "same-origin",
+      headers: alreadyAdded ? undefined : { "Content-Type": "application/json" },
+      body: alreadyAdded ? undefined : JSON.stringify({ product_id: productId }),
+    });
+    if (res.status === 401) { setOpenAuthModal(true); return false; }
+    const json = await res.json();
+    if (!res.ok) { ToastNotification("error", json?.message || "Could not update wishlist"); return false; }
+    setWishlistProducts(json?.data || []);
+    ToastNotification("success", alreadyAdded ? "Removed from wishlist" : "Added to wishlist");
+    return true;
   };
 
-  return (
-    <CartContext.Provider
-      value={{
-        ...props,
-        wishlistProducts,
-        WishlistAPILoading,
-        setWishlistProducts,
-        removeWishlist,
-        refetch,
-        isLoading,
-        WishlistAPILoading,
-        addToWishlist,
-      }}
-    >
-      {props.children}
-    </CartContext.Provider>
-  );
-};
+  const removeWishlist = async (productId) => {
+    if (!accountData) { setOpenAuthModal(true); return false; }
+    const res = await fetch(`/api/wishlist/${productId}`, { method: "DELETE", credentials: "same-origin" });
+    const json = await res.json();
+    if (res.ok) setWishlistProducts(json?.data || []);
+    return res.ok;
+  };
 
+  return <WishlistContext.Provider value={{ wishlistProducts, WishlistAPILoading, setWishlistProducts, removeWishlist, refetch, addToWishlist, isWishlisted }}>
+    {children}
+  </WishlistContext.Provider>;
+};
 export default WishlistProvider;

@@ -12,7 +12,6 @@ import Footers from "./footer";
 import Headers from "./header";
 import MobileMenu from "./header/widgets/MobileMenu";
 import NewsLetterModal from "./newsLetterModal";
-import TapTop from "./tapTop";
 
 const SubLayout = ({ children }) => {
   const isTabActive = TabFocusChecker();
@@ -96,7 +95,6 @@ const SubLayout = ({ children }) => {
       <Footers />
       <NextTopLoader showSpinner={false} />
       {themeOption?.popup?.news_letter?.is_enable && <NewsLetterModal setMakeExitActive={setMakeExitActive} />}
-      <TapTop />
       {themeOption?.popup?.exit?.is_enable && makeExitActive && <ExitModal dataApi={themeOption?.popup?.exit} headerLogo={themeOption?.logo?.header_logo?.original_url} />}
     </>
   );

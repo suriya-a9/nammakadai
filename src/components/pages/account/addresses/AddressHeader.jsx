@@ -1,71 +1,12 @@
-import CustomModal from "@/components/widgets/CustomModal";
-import NoDataFound from "@/components/widgets/NoDataFound";
+"use client";
 import AccountContext from "@/context/accountContext";
-import Btn from "@/elements/buttons/Btn";
-import { AddressAPI } from "@/utils/axiosUtils/API";
-import useCreate from "@/utils/hooks/useCreate";
 import { useContext, useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Card, CardBody } from "reactstrap";
-import AddAddressForm from "./AddAddressForm";
-import AddressData from "./AddressData";
-
-const AddressHeader = () => {
-  const { t } = useTranslation("common");
-  const [addressState, setAddressState] = useState([]);
-  const [editAddress, setEditAddress] = useState();
-  const [modal, setModal] = useState("");
-  const { accountData, refetch } = useContext(AccountContext);
-  useEffect(() => {
-    accountData?.address.length > 0 && setAddressState((prev) => [...accountData?.address]);
-  }, [accountData]);
-  const { mutate, isLoading } = useCreate(AddressAPI, false, false, "Address Added successfully", (resDta) => {
-    setAddressState((prev) => [...prev, resDta?.data]);
-    refetch();
-    setModal("");
-  });
-  const { mutate: editMutate, isLoading: editLoader } = useCreate(`${AddressAPI}/${editAddress?.id}`, false, false, "Address Updated successfully", (resDta) => {
-    setAddressState((prev) =>
-      prev.map((elem) => {
-        if (elem?.id == resDta?.data?.id) {
-          return (elem = resDta?.data);
-        } else {
-          return elem;
-        }
-      })
-    );
-    refetch();
-    setModal("");
-    setEditAddress("");
-  });
-  return (
-    <Card>
-      <CardBody>
-        <div className="top-sec">
-          <h3>{t("AddressBook")}</h3>
-          <Btn tag="a" size="sm" color="transparent" className=" btn-solid" onClick={() => setModal("add")}>
-            + {t("AddNew")}
-          </Btn>
-        </div>
-        {addressState?.length > 0 ? (
-          <>
-            <div className="address-book-section">
-              <AddressData addressState={addressState} setAddressState={setAddressState} modal={modal} setModal={setModal} setEditAddress={setEditAddress} />
-            </div>
-          </>
-        ) : (
-          <NoDataFound customClass="no-data-added" imageUrl={`/assets/svg/empty-items.svg`} title="NoAddressFound" description="NoAddressDescription" height="300" width="300" />
-        )}
-        <div className="checkout-detail">
-          <CustomModal modal={modal == "add" || modal == "edit" ? true : false} setModal={setModal} classes={{ modalClass: "theme-modal-2 view-modal address-modal", title: modal == "add" ? "AddAddress" : "EditAddress" }}>
-            <div className="right-sidebar-box">
-              <AddAddressForm mutate={modal == "add" ? mutate : editMutate} method={modal == "add" ? "POST" : ""} isLoading={isLoading || editLoader} setModal={setModal} setEditAddress={setEditAddress} editAddress={editAddress} modal={modal} setAddressState={setAddressState} />
-            </div>
-          </CustomModal>
-        </div>
-      </CardBody>
-    </Card>
-  );
-};
-
-export default AddressHeader;
+import { Card, CardBody, Col, Row } from "reactstrap";
+const empty={label:"home",name:"",phone:"",address:"",city:"",state:"",pincode:"",is_default:false};
+export default function AddressHeader(){const {accountData,refetch}=useContext(AccountContext);const [addresses,setAddresses]=useState([]);const [form,setForm]=useState(empty);const [editing,setEditing]=useState(null);const [show,setShow]=useState(false);const [error,setError]=useState("");const [saving,setSaving]=useState(false);
+useEffect(()=>setAddresses(accountData?.address||[]),[accountData]);
+const openAdd=()=>{setEditing(null);setForm({...empty,name:accountData?.name||"",phone:accountData?.phone||""});setError("");setShow(true)};
+const openEdit=a=>{setEditing(a.id);setForm({label:a.label,name:a.name,phone:a.phone,address:a.address,city:a.city,state:a.state,pincode:a.pincode,is_default:a.is_default});setError("");setShow(true)};
+const save=async e=>{e.preventDefault();setSaving(true);setError("");try{const r=await fetch(editing?`/api/address/${editing}`:"/api/address",{method:editing?"PUT":"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify(form)});const d=await r.json();if(!r.ok)throw new Error(d.message||"Unable to save address");await refetch();setShow(false)}catch(e){setError(e.message)}finally{setSaving(false)}};
+const remove=async id=>{if(!confirm("Remove this saved address?"))return;const r=await fetch(`/api/address/${id}`,{method:"DELETE",credentials:"same-origin"});if(r.ok)await refetch();};
+return <Card><CardBody><div className="top-sec"><h3>Address Book</h3><button className="btn btn-solid btn-sm" onClick={openAdd}>+ Add New</button></div>{addresses.length?<Row className="g-4 mt-1">{addresses.map(a=><Col xl={4} md={6} key={a.id}><div className="select-box"><div className="address-box"><div className="top"><h6>{a.name} <span>{a.title}</span></h6>{a.is_default&&<small>Default</small>}</div><div className="middle"><div className="address"><p>{a.address}</p><p>{a.city}, {a.state} - {a.pincode}</p></div><div className="number"><p>Phone: {a.phone}</p></div></div><div className="bottom"><button className="btn bottom_btn" onClick={()=>openEdit(a)}>Edit</button><button className="btn bottom_btn" onClick={()=>remove(a.id)}>Remove</button></div></div></div></Col>)}</Row>:<p className="mt-4">No saved addresses yet.</p>}{show&&<div className="mt-4 border rounded p-3"><h4>{editing?"Edit Address":"Add Address"}</h4><form onSubmit={save}><div className="mb-3"><label className="form-label">Save as</label><div><label className="me-4"><input type="radio" name="label" checked={form.label==="home"} onChange={()=>setForm({...form,label:"home"})}/> Home</label><label><input type="radio" name="label" checked={form.label==="work"} onChange={()=>setForm({...form,label:"work"})}/> Work</label></div></div><Row>{[["name","Full name"],["phone","Phone number"],["address","Street address / house number"],["city","City"],["state","State"],["pincode","PIN code"]].map(([k,l])=><Col md={k==="address"?12:6} key={k}><div className="mb-3"><label className="form-label">{l} *</label><input className="form-control" required value={form[k]} onChange={e=>setForm({...form,[k]:e.target.value})}/></div></Col>)}</Row><label className="mb-3"><input type="checkbox" checked={form.is_default} onChange={e=>setForm({...form,is_default:e.target.checked})}/> <span className="ms-1">Use as default address</span></label>{error&&<div className="alert alert-danger">{error}</div>}<div><button className="btn btn-solid me-2" disabled={saving}>{saving?"Saving…":"Save Address"}</button><button type="button" className="btn btn-outline-secondary" onClick={()=>setShow(false)}>Cancel</button></div></form></div>}</CardBody></Card>}

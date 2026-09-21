@@ -1,50 +1,17 @@
-import ThemeOptionContext from "@/context/themeOptionsContext";
+import WishlistContext from "@/context/wishlistContext";
 import Btn from "@/elements/buttons/Btn";
 import { audioFile, Href } from "@/utils/constants";
-import Cookies from "js-cookie";
-import { useRouter } from "next/navigation";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { RiHeartFill, RiHeartLine } from "react-icons/ri";
 
 const WishlistButton = ({ productstate, customClass, hideAction, customAnchor }) => {
-  const [isLoginModalOpen, setLoginModalOpen] = useState(false);
-  const [productWishlist, setProductWishlist] = useState(productstate?.is_wishlist);
-  const [addToWishlistAudio, setAddToWishlistAudio] = useState(new Audio(audioFile));
-  const router = useRouter();
-  const { setOpenAuthModal } = useContext(ThemeOptionContext);
-
-  const handelWishlist = (productstate) => {
-    if (Cookies.get("uat")) {
-      addToWishlistAudio.play();
-      router.push("/wishlist");
-      // Put your logic here
-    } else {
-      setOpenAuthModal(true);
-    }
-  };
-
-  const handleCloseModal = () => {
-    setLoginModalOpen(false);
-  };
-  return (
-    <>
-      {customClass ? (
-        <Btn className={customClass ? customClass : ""} onClick={() => handelWishlist(productstate)}>
-          {productWishlist ? <RiHeartFill className="theme-color" /> : <RiHeartLine />}
-        </Btn>
-      ) : customAnchor ? (
-        <a href={Href} title="Add to Wishlist" className={`wishlist-icon ${productWishlist ? "theme-color" : ""}`} onClick={() => handelWishlist(productstate)}>
-          <i className={`ri-heart-${productWishlist ? "fill" : "line"}`}></i>
-        </a>
-      ) : (
-        !hideAction?.includes("wishlist") && (
-          <div title="Wishlist" onClick={() => handelWishlist(productstate)} className="wishlist-icon">
-            <a className={"heart-icon"}>{productWishlist ? <RiHeartFill className="theme-color" /> : <RiHeartLine />}</a>
-          </div>
-        )
-      )}
-    </>
-  );
+  const { addToWishlist, isWishlisted } = useContext(WishlistContext);
+  const [audio, setAudio] = useState(null);
+  const active = isWishlisted(productstate?.uuid || productstate?.id);
+  useEffect(() => { if (typeof window !== "undefined") setAudio(new Audio(audioFile)); }, []);
+  const handle = async (e) => { e?.preventDefault?.(); e?.stopPropagation?.(); const ok = await addToWishlist(productstate); if (ok && audio) audio.play().catch(() => {}); };
+  if (customClass) return <Btn className={customClass} onClick={handle}>{active ? <RiHeartFill className="theme-color" /> : <RiHeartLine />}</Btn>;
+  if (customAnchor) return <a href={Href} title="Add to Wishlist" className={`wishlist-icon ${active ? "theme-color" : ""}`} onClick={handle}><i className={`ri-heart-${active ? "fill" : "line"}`}></i></a>;
+  return !hideAction?.includes("wishlist") && <div title="Wishlist" onClick={handle} className="wishlist-icon"><a className="heart-icon">{active ? <RiHeartFill className="theme-color" /> : <RiHeartLine />}</a></div>;
 };
-
 export default WishlistButton;

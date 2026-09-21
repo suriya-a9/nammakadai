@@ -1,0 +1,10 @@
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { customerFromRequest } from "@/lib/customerAuth";
+export const runtime="nodejs"; export const dynamic="force-dynamic";
+const bad=(message,status=422)=>NextResponse.json({message},{status});
+const clean=b=>({label:String(b.label||b.title||"").trim().toLowerCase(),name:String(b.name||"").trim(),phone:String(b.phone||"").trim(),address:String(b.address||b.street||"").trim(),city:String(b.city||"").trim(),state:String(b.state||"").trim(),pincode:String(b.pincode||"").trim(),isDefault:Boolean(b.is_default??b.isDefault)});
+const valid=a=>(a.label==="home"||a.label==="work")&&a.name&&a.name.length<=120&&/^[0-9+()\s-]{8,20}$/.test(a.phone)&&a.address&&a.address.length<=500&&a.city&&a.city.length<=120&&a.state&&a.state.length<=120&&a.pincode&&a.pincode.length<=20;
+const out=a=>({id:a.uuid,uuid:a.uuid,title:a.label[0].toUpperCase()+a.label.slice(1),label:a.label,name:a.name,phone:a.phone,street:a.address,address:a.address,city:a.city,state:a.state,pincode:a.pincode,is_default:a.isDefault});
+export async function GET(request){const c=await customerFromRequest(request);if(!c)return bad("Login required",401);const rows=await prisma.customerAddress.findMany({where:{customerUuid:c.uuid},orderBy:[{isDefault:"desc"},{createdAt:"desc"}]});return NextResponse.json({data:rows.map(out)});}
+export async function POST(request){const c=await customerFromRequest(request);if(!c)return bad("Login required",401);const a=clean(await request.json());if(!valid(a))return bad("Please enter a complete Home or Work address");const count=await prisma.customerAddress.count({where:{customerUuid:c.uuid}});if(count===0)a.isDefault=true;const row=await prisma.$transaction(async tx=>{if(a.isDefault)await tx.customerAddress.updateMany({where:{customerUuid:c.uuid},data:{isDefault:false}});return tx.customerAddress.create({data:{customerUuid:c.uuid,...a}});});return NextResponse.json({message:"Address saved successfully",data:out(row)},{status:201});}

@@ -6,25 +6,28 @@ import { RiMailLine, RiMapPinLine, RiPhoneLine } from "react-icons/ri";
 const FooterStoreInformation = ({ icon }) => {
   const { t } = useTranslation("common");
   const { themeOption } = useContext(ThemeOptionContext);
+  const phone = themeOption?.footer?.support_number;
+  const email = themeOption?.footer?.about_email?.toLowerCase();
+  const phoneHref = phone ? `tel:${String(phone).replace(/[^+\d]/g, "")}` : "#";
 
   return (
     <ul className={icon ? "contact-list" : "contact-details"}>
       {themeOption?.footer?.about_address && (
         <li>
           {icon && <RiMapPinLine />}
-          {themeOption?.footer?.about_address}
+          <span>{themeOption.footer.about_address}</span>
         </li>
       )}
-      {themeOption?.footer?.support_number && (
+      {phone && (
         <li>
           {icon && <RiPhoneLine />}
-          {t("CallUs")}: {themeOption?.footer?.support_number}
+          <span>{t("CallUs")}: <a className="nk-footer-contact-link" href={phoneHref}>{phone}</a></span>
         </li>
       )}
-      {themeOption?.footer?.about_email && (
+      {email && (
         <li>
           {icon && <RiMailLine />}
-          {t("EmailUs")}: {themeOption?.footer?.about_email}
+          <span>{t("EmailUs")}: <a className="nk-footer-contact-link" href={`mailto:${email}`}>{email}</a></span>
         </li>
       )}
     </ul>

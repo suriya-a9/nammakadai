@@ -15,9 +15,10 @@ export async function GET(request){
 export async function POST(request){
  const customer=await customerFromRequest(request);if(!customer)return invalid("Please login before placing your order",401);
  try {
-  const b=await request.json();const s=b.shipping_address||{};
-  const name=String(s.name||customer.name||"").trim();const phone=String(s.phone||"").trim();const address=String(s.address||"").trim();const city=String(s.city||"").trim();const state=String(s.state||"").trim();const pincode=String(s.pincode||"").trim();
-  if(!name||name.length>120||!/^[0-9+()\s-]{8,20}$/.test(phone)||!address||address.length>500||!city||city.length>120||!state||state.length>120||!pincode||pincode.length>20)return invalid("Please enter complete, valid delivery details");
+  const b=await request.json();
+  const savedAddress=await prisma.customerAddress.findFirst({where:{uuid:String(b.address_id||""),customerUuid:customer.uuid}});
+  if(!savedAddress)return invalid("Please select a valid saved delivery address");
+  const name=savedAddress.name;const phone=savedAddress.phone;const address=savedAddress.address;const city=savedAddress.city;const state=savedAddress.state;const pincode=savedAddress.pincode;
   if(b.payment_method!=="cod")return invalid("Only Cash on Delivery is supported at this time");
   if(!Array.isArray(b.items)||b.items.length===0||b.items.length>50)return invalid("Cart is empty or too large");
   const items=[];const unique=new Set();
