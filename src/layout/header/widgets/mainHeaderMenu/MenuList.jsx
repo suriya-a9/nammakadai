@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import LinkBox from "./LinkBox";
 import MenuMedia from "./MenuMedia";
 import Link from "next/link";
-import Cookies from "js-cookie";
+import AccountContext from "@/context/accountContext";
 import { ToastNotification } from "@/utils/customFunctions/ToastNotification";
 import { useContext } from "react";
 import ThemeOptionContext from "@/context/themeOptionsContext";
@@ -15,10 +15,11 @@ const MenuList = ({ menu, isOpen, setIsOpen, level }) => {
   const redirect = (path) => {
     router.push(`/${path}`);
   };
-  const isAuthenticated = Cookies.get("uat");
+  const { accountData } = useContext(AccountContext);
+  const isAuthenticated = Boolean(accountData);
   const { setOpenAuthModal } = useContext(ThemeOptionContext);
 
-  const protectedRoutes = [`/account/dashboard`, `/account/notification`, `/account/wallet`, `/account/bank-details`, `/account/bank-details`, `/account/point`, `/account/refund`, `/account/order`, `/account/addresses`, `/wishlist`, `/compare`];
+  const protectedRoutes = [`/account/dashboard`, `/account/notification`, `/account/bank-details`, `/account/bank-details`, `/account/refund`, `/account/order`, `/account/addresses`, `/wishlist`];
 
   const protectedRoute = (route) => {
     if (!isAuthenticated && protectedRoutes.includes(route)) {

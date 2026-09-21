@@ -24,91 +24,18 @@ export async function proxy(request) {
     return NextResponse.next();
   }
 
-  const urlSearchParams = new URLSearchParams(search);
-  const params = Object.fromEntries(urlSearchParams.entries());
-  void params;
-
-  const token = request.cookies.get("uat")?.value || "";
-
-  const protectedRoutes = [
-    "/account/dashboard",
-    "/account/notification",
-    "/account/wallet",
-    "/account/bank-details",
-    "/account/point",
-    "/account/refund",
-    "/account/order",
-    "/account/addresses",
-    "/wishlist",
-    "/compare",
-  ];
-
-  let settingData = null;
-
-  try {
-    const response = await fetch(process.env.API_PROD_URL + "/settings", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      next: { revalidate: 300 },
-    });
-
-    if (response.ok) {
-      settingData = await response.json();
-    }
-  } catch (error) {
-    console.error("Settings API Error:", error);
+  // This lightweight guard checks for a customer session cookie. The checkout page
+  // and every customer/order API validate its JWT signature and database identity.
+  const customerToken = request.cookies.get("customer_session")?.value;
+  const protectedRoutes = ["/account/dashboard", "/account/order", "/account/notification", "/account/addresses"];
+  if (!customerToken && (protectedRoutes.some(route => pathname === route || pathname.startsWith(route + "/")))) {
+    const next = encodeURIComponent(pathname + search);
+    return NextResponse.redirect(new URL(`/auth/login?next=${next}`, request.url));
   }
-
-  const path = pathname;
-
-  if (
-    settingData?.values?.maintenance?.maintenance_mode &&
-    path !== "/maintenance"
-  ) {
-    return NextResponse.redirect(new URL("/maintenance", request.url));
+  if (!customerToken && pathname === "/checkout") {
+    return NextResponse.redirect(new URL("/auth/login?next=%2Fcheckout", request.url));
   }
-
-  if (
-    !settingData?.values?.maintenance?.maintenance_mode &&
-    path === "/maintenance"
-  ) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
-  if (protectedRoutes.includes(path) && !request.cookies.has("uat")) {
-    const response = NextResponse.redirect(
-      new URL(request?.cookies?.get("currentPath")?.value || "/", request.url)
-    );
-    response.cookies.set("showAuthToast", "true", { httpOnly: false });
-    return response;
-  }
-
-  if (path === "/checkout" && !request.cookies.has("uat")) {
-    if (settingData?.values?.activation?.guest_checkout) {
-      if (request.cookies.get("cartData") == "digital") {
-        return NextResponse.redirect(new URL("/auth/login", request.url));
-      }
-    } else {
-      return NextResponse.redirect(new URL("/auth/login", request.url));
-    }
-  }
-
-  if (path === "/auth/login" && request.cookies.has("uat")) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
-  if (path === "/auth/otp-verification" && !request.cookies.has("ue")) {
-    return NextResponse.redirect(new URL("/auth/login", request.url));
-  }
-
-  if (
-    path === "/auth/update-password" &&
-    (!request.cookies.has("uo") || !request.cookies.has("ue"))
-  ) {
-    return NextResponse.redirect(new URL("/auth/login", request.url));
-  }
+  // Other storefront routes including cart remain public.
 
   if (request.headers.get("x-redirected")) {
     return NextResponse.next();

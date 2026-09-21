@@ -19,8 +19,8 @@ const LoginForm = ({ setState }) => {
   return (
     <Formik
       initialValues={{
-        email: "john.customer@example.com",
-        password: "123456789",
+        email: "",
+        password: "",
         recaptcha: "",
       }}
       validationSchema={YupObject({
@@ -45,7 +45,7 @@ const LoginForm = ({ setState }) => {
           <div className="auth-box mb-3">
             <Label htmlFor="review">{t("Password")}</Label>
             <Field name="password" type="password" className="form-control" id="review" placeholder={t("EnterYourPassword")} required />
-            <a href={Href} className="forgot" onClick={() => setState("forgot")}>
+            <a href={Href} className="forgot" onClick={(event) => { event.preventDefault(); setState("forgot"); }}>
               {t("ForgotYourPassword")}?
             </a>
           </div>

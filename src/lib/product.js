@@ -72,7 +72,7 @@ export const serializeProduct = (product) => {
     slug: product.slug,
     short_description: product.description || "",
     description: product.description || "",
-    type: "classified",
+    type: "simple",
     unit: "1 Item",
     weight: null,
     quantity: product.quantity,

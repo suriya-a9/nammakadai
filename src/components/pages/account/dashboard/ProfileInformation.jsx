@@ -24,7 +24,7 @@ const ProfileInformation = () => {
               </li>
               <li>
                 <h6>
-                  {t("Phone")} : +{accountData?.country_code} {accountData?.phone}
+                  {t("Phone")} : {accountData?.phone || "Not provided"}
                 </h6>
               </li>
               {accountData?.address[0] ? (

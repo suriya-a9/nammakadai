@@ -120,7 +120,7 @@
       font-weight: 700;
       margin: 0 auto;
       transition: 0.5s ease;
-      text-transform: uppercase;
+      text-transform: none;
       font-size: calc(14px + (16 - 14) * ((100vw - 320px) / (1920 - 320)));
       margin-bottom: -4px;
     }
@@ -346,7 +346,7 @@
 
     h6 {
       color: var(--theme-color);
-      text-transform: uppercase;
+      text-transform: none;
       letter-spacing: 0.3em;
       line-height: 1;
       margin-bottom: 0;
@@ -465,7 +465,7 @@
     }
 
     h4 {
-      text-transform: uppercase;
+      text-transform: none;
       color: $grey-dark;
       font-weight: 700;
       margin-bottom: 0;
@@ -557,7 +557,7 @@
 
     h4 {
       color: $dark-font;
-      text-transform: uppercase;
+      text-transform: none;
       font-weight: 700;
       margin-bottom: 0;
       transition: all 0.5s ease;
@@ -1038,7 +1038,7 @@
           font-weight: 400;
           line-height: 23px;
           text-decoration: none;
-          text-transform: uppercase;
+          text-transform: none;
           letter-spacing: 0.07em;
           text-align: right;
           width: 100%;
@@ -1061,7 +1061,7 @@
         font-weight: 400;
         line-height: 23px;
         text-decoration: none;
-        text-transform: uppercase;
+        text-transform: none;
         letter-spacing: 0.07em;
         width: 100%;
       }
@@ -1121,7 +1121,7 @@
       margin: 0 auto;
       letter-spacing: 1.1px;
       transition: all 0.5s ease;
-      text-transform: uppercase;
+      text-transform: none;
       font-size: calc(14px + (16 - 14) * ((100vw - 320px) / (1920 - 320)));
     }
 

@@ -57,7 +57,7 @@ const CheckoutSidebar = ({ values, setFieldValue, errors, addToCartData }) => {
         // Put Your logic here
       }
     }
-  }, [CartLoading, cartTotal, errors, values["points_amount"], values["wallet_balance"], values["billing_address_id"], values["delivery_description"], values["payment_method"], values["shipping_address_id"], values["delivery_interval"]]);
+  }, [CartLoading, cartTotal, errors, values["billing_address_id"], values["delivery_description"], values["payment_method"], values["shipping_address_id"], values["delivery_interval"]]);
 
   return (
     <>

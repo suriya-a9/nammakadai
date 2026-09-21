@@ -1,8 +1,12 @@
 import SearchModule from "@/components/pages/search";
-import React from "react";
+import { Suspense } from "react";
 
 const Search = () => {
-  return <SearchModule />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SearchModule />
+    </Suspense>
+  );
 };
 
 export default Search;

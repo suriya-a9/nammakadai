@@ -31,37 +31,25 @@ const CollectionFilter = ({ filter, setFilter, categorySlug }) => {
   };
   const filterObj = {
     category: splitFilter("category"),
-    attribute: splitFilter("attribute"),
     price: splitFilter("price"),
-    rating: splitFilter("rating"),
-    brand: splitFilter("brand"),
   };
   const mergeFilter = () => {
-    setSelectedFilters([...filterObj["category"], ...filterObj["brand"], ...filterObj["attribute"], ...filterObj["price"], ...filterObj["rating"].map((val) => (val.startsWith("rating ") ? val : `rating ${val}`))]);
+    setSelectedFilters([...filterObj["category"], ...filterObj["price"]]);
   };
   useEffect(() => {
     mergeFilter();
   }, [filter]);
 
   const removeParams = (slugValue) => {
-    Object.keys(filterObj).forEach((key) => {
-      filterObj[key] = filterObj[key].filter((val) => {
-        if (key === "rating") {
-          return val !== slugValue.replace(/^rating /, "");
-        }
-        return val !== slugValue;
-      });
-      mergeFilter();
-      setFilter(filterObj);
-      const params = {};
-      Object.keys(filterObj).forEach((key) => {
-        if (filterObj[key].length > 0) {
-          params[key] = filterObj[key].join(",");
-        }
-      });
-      const queryParams = new URLSearchParams({ ...params, ...layout }).toString();
-      router.push(`${pathname}?${queryParams}`);
-    });
+    const next = {
+      category: filterObj.category.filter((value) => value !== slugValue),
+      price: filterObj.price.filter((value) => value !== slugValue),
+    };
+    setFilter((prev) => ({ ...prev, ...next }));
+    const params = new URLSearchParams(layout);
+    if (next.category.length) params.set("category", next.category.join(","));
+    if (next.price.length) params.set("price", next.price.join(","));
+    router.push(`${pathname}${params.toString() ? `?${params}` : ""}`);
   };
 
   const clearParams = () => {

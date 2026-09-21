@@ -2,7 +2,7 @@
     Typography css start
 ==========================**/
 body {
-    font-family: "Cinzel", serif;
+    font-family: "Montserrat", sans-serif;
     position: relative;
     background: $white;
     font-size: 14px;
@@ -26,7 +26,7 @@ h1 {
     font-size: 60px;
     color: $dark-font;
     font-weight: 700;
-    text-transform: uppercase;
+    text-transform: none;
 
     span {
         font-size: 107px;
@@ -38,7 +38,7 @@ h1 {
 h2 {
     font-size: 36px;
     color: $dark-font;
-    text-transform: uppercase;
+    text-transform: none;
     font-weight: 700;
     line-height: 1;
     letter-spacing: 0.02em;

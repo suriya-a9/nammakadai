@@ -1,4 +1,5 @@
 import "../index.scss";
+import { Suspense } from "react";
 import { I18nProvider } from "./i18n/i18n-context";
 import { detectLanguage } from "./i18n/server";
 
@@ -38,7 +39,6 @@ export default async function RootLayout({ children }) {
       <html lang="en" data-scroll-behavior="smooth">
         <head>
           {/* Global font */}
-          <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
           <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
           <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
           <link rel="preconnect" href="https://fonts.gstatic.com" />
@@ -49,7 +49,9 @@ export default async function RootLayout({ children }) {
           <link href="https://fonts.googleapis.com/css2?family=Courgette&display=swap" rel="stylesheet" />
           <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
         </head>
-        <body suppressHydrationWarning={true}>{children}</body>
+        <body suppressHydrationWarning={true}>
+          <Suspense fallback={null}>{children}</Suspense>
+        </body>
       </html>
     </I18nProvider>
   );

@@ -165,6 +165,11 @@ export default function AdminThemeShell({ admin, children }) {
                 </li>
 
                 <li className="sidebar-list">
+                  <Link href="/admin/orders" className={`sidebar-link sidebar-title link-nav ${pathname.startsWith("/admin/orders") ? "active" : ""}`}>
+                    <div className="svg-icon"><RiFolderLine /></div><span>Customer Orders</span>
+                  </Link>
+                </li>
+                <li className="sidebar-list">
                   <a
                     href="#"
                     className={`sidebar-link sidebar-title link-nav ${productsSectionActive ? "active" : ""}`}

@@ -1,7 +1,6 @@
 import WrapperComponent from "@/components/widgets/WrapperComponent";
-import CompareContext from "@/context/compareContext";
 import ThemeOptionContext from "@/context/themeOptionsContext";
-import { CompareAPI, WishlistAPI } from "@/utils/axiosUtils/API";
+import { WishlistAPI } from "@/utils/axiosUtils/API";
 import { Href } from "@/utils/constants";
 import { dateFormat } from "@/utils/customFunctions/DateFormat";
 import useCreate from "@/utils/hooks/useCreate";
@@ -9,7 +8,7 @@ import { useCustomSearchParams } from "@/utils/hooks/useCustomSearchParams";
 import Cookies from "js-cookie";
 import Link from "next/link";
 import { useContext, useEffect } from "react";
-import { RiHeartLine, RiShuffleLine } from "react-icons/ri";
+import { RiHeartLine } from "react-icons/ri";
 import { Col } from "reactstrap";
 import ProductContent from "../common/ProductContent";
 import ProductWholesale from "../common/ProductWholesale";
@@ -18,8 +17,6 @@ import DigitalImage from "./DigitalImage";
 
 const ProductDigital = ({ productState, setProductState }) => {
   const [attribute, price, rating, sortBy, field, layout, category, checkLogin] = useCustomSearchParams(["attribute", "price", "rating", "sortBy", "field", "layout", "category", "checkLogin"]);
-  const { compareState, setCompareState } = useContext(CompareContext);
-  const { data, mutated, isLoadings } = useCreate(CompareAPI, false, false, "Added to Compare List");
   const { mutate, isLoading } = useCreate(WishlistAPI, false, false, "Added to Wishlist List");
   const { setOpenAuthModal } = useContext(ThemeOptionContext);
 
@@ -31,19 +28,6 @@ const ProductDigital = ({ productState, setProductState }) => {
     }
   };
 
-  const addToCompare = (productState) => {
-    if (!Cookies.get("uat")) {
-      const queryParams = new URLSearchParams({ ...attribute, ...price, ...sortBy, ...field, ...rating, ...layout, ...category }).toString();
-      setOpenAuthModal(true);
-    } else {
-      // Put your logic here
-    }
-  };
-  useEffect(() => {
-    if (data?.status == 200 || data?.status == 201) {
-      setCompareState([...compareState, productObj]);
-    }
-  }, [isLoading, isLoadings]);
   return (
     <WrapperComponent classes={{ sectionClass: "product-section section-b-space theme-product-section", row: "g-4" }} customCol={true}>
       <Col xl={8} lg={7}>
@@ -66,10 +50,6 @@ const ProductDigital = ({ productState, setProductState }) => {
                 <span>{"Add to Wishlist"}</span>
               </a>
 
-              <a onClick={() => addToCompare()}>
-                <RiShuffleLine />
-                <span>{"Add to Compare"}</span>
-              </a>
             </div>
 
             <div className="pickup-box">

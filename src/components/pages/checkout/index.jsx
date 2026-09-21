@@ -1,159 +1,23 @@
 "use client";
 import WrapperComponent from "@/components/widgets/WrapperComponent";
+import Breadcrumbs from "@/utils/commonComponents/breadcrumb";
+import CartContext from "@/context/cartContext";
 import AccountContext from "@/context/accountContext";
 import SettingContext from "@/context/settingContext";
-import ThemeOptionContext from "@/context/themeOptionsContext";
-import Loader from "@/layout/loader";
-import request from "@/utils/axiosUtils";
-import { AddToCartAPI, AddressAPI } from "@/utils/axiosUtils/API";
-import Breadcrumbs from "@/utils/commonComponents/breadcrumb";
-import useCreate from "@/utils/hooks/useCreate";
-import { emailSchema, idCreateAccount, nameSchema, phoneSchema } from "@/utils/validation/ValidationSchema";
-import useFetchQuery from "@/utils/hooks/useFetchQuery";
-import { Form, Formik } from "formik";
-import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import { Fragment, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Col, Row } from "reactstrap";
-import * as Yup from "yup";
-import CheckoutForm from "./CheckoutForm";
-import CheckoutSidebar from "./checkoutSidebar";
-import DeliveryAddress from "./DeliveryAddress";
-import DeliveryOptions from "./DeliveryOptions";
-import PaymentOptions from "./PaymentOptions";
-
-const CheckoutContent = () => {
-  const { accountData, refetch } = useContext(AccountContext);
-  const { settingData } = useContext(SettingContext);
-  const [address, setAddress] = useState([]);
-  const [modal, setModal] = useState("");
-  const router = useRouter();
-  const [accessToken, setAccessToken] = useState(null);
-
-  useEffect(() => {
-    const token = Cookies.get("uat");
-    setAccessToken(token);
-  }, []);
-  
-  useEffect(() => {
-    accountData?.address.length > 0 && setAddress((prev) => [...accountData?.address]);
-  }, [accountData]);
-
-  const { mutate, isLoading } = useCreate(AddressAPI, false, false, "Address Added successfully", (resDta) => {
-    setAddress((prev) => [...prev, resDta?.data]);
-    refetch();
-    setModal("");
-  });
-
-  // Calling Add to Cart API
-  const { data: addToCartData, isLoading: addToCartLoader, refetch: addToCartRefetch } = useFetchQuery([AddToCartAPI], () => request({ url: AddToCartAPI }, router), { enabled: false, refetchOnWindowFocus: false, cacheTime: 0, select: (res) => res?.data });
-
-  useEffect(() => {
-    if (accessToken && !addToCartLoader) {
-      addToCartRefetch();
-    }
-  }, [addToCartLoader, accessToken]);
-  const { isLoading: themeLoad } = useContext(ThemeOptionContext);
-
-  const addressSchema = Yup.object().shape({
-    title: nameSchema,
-    street: nameSchema,
-    city: nameSchema,
-    country_code: nameSchema,
-    phone: nameSchema,
-    pincode: nameSchema,
-    country_id: nameSchema,
-    state_id: nameSchema,
-  });
-
-  if (themeLoad) return <Loader />;
-  return (
-    <Fragment>
-      <Breadcrumbs title={"Checkout"} subNavigation={[{ name: "Checkout" }]} />
-      <WrapperComponent classes={{ sectionClass: "section-b-space checkout-section-2", fluidClass: "container" }} noRowCol={true}>
-        <div className="checkout-page checkout-form">
-          <Formik
-            initialValues={{
-              products: [],
-              shipping_address_id: "",
-              billing_address_id: "",
-              points_amount: "",
-              wallet_balance: "",
-              coupon: "",
-              delivery_description: "",
-              delivery_interval: "",
-              payment_method: "",
-              create_account: false,
-              name: "",
-              email: "",
-              country_code: "91",
-              phone: "",
-              password: "",
-              shipping_address: {
-                title: "",
-                street: "",
-                city: "",
-                country_code: "91",
-                phone: "",
-                pincode: "",
-                country_id: "",
-                state_id: "",
-              },
-              billing_address: {
-                same_shipping: false,
-                title: "",
-                street: "",
-                city: "",
-                country_code: "91",
-                phone: "",
-                pincode: "",
-                country_id: "",
-                state_id: "",
-              },
-            }}
-            validationSchema={Yup.object().shape({
-              name: nameSchema,
-              email: emailSchema,
-              phone: phoneSchema,
-              password: idCreateAccount,
-              shipping_address: addressSchema,
-              billing_address: addressSchema,
-            })}
-            onSubmit={mutate}
-          >
-            {({ values, setFieldValue, errors }) => (
-              <Form className="checkout-form">
-                <Row className="g-sm-4 g-3">
-                  <Col lg="7">
-                    <div className="left-sidebar-checkout">
-                      <div className="checkout-detail-box">
-                        {settingData?.activation?.guest_checkout && !accessToken && (
-                          <div className="checkout-form-section">
-                            <CheckoutForm values={values} setFieldValue={setFieldValue} errors={errors} />
-                          </div>
-                        )}
-                        {accessToken && (
-                          <div className="checkout-detail-box">
-                            <ul>
-                              {!addToCartData?.is_digital_only && <DeliveryAddress key="shipping" type="shipping" title={"Shipping"} values={values} updateId={values["consumer_id"]} setFieldValue={setFieldValue} address={address} modal={modal} mutate={mutate} isLoading={isLoading} setModal={setModal} />}
-                              <DeliveryAddress key="billing" type="billing" title={"Billing"} values={values} updateId={values["consumer_id"]} setFieldValue={setFieldValue} address={address} modal={modal} mutate={mutate} isLoading={isLoading} setModal={setModal} />
-                              {!addToCartData?.is_digital_only && <DeliveryOptions values={values} setFieldValue={setFieldValue} />}
-                              <PaymentOptions values={values} setFieldValue={setFieldValue} />
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </Col>
-                  <CheckoutSidebar addToCartData={addToCartData} values={values} setFieldValue={setFieldValue} errors={errors} />
-                </Row>
-              </Form>
-            )}
-          </Formik>
-        </div>
-      </WrapperComponent>
-    </Fragment>
-  );
-};
-
-export default CheckoutContent;
+import SidebarProduct from "./checkoutSidebar/SidebarProduct";
+import Link from "next/link";
+const CheckoutContent=()=>{
+ const router=useRouter();const {cartProducts,clearCart, getCartLoading,waitForCartSync,refetch:refreshCart,cartSyncError}=useContext(CartContext);const {accountData}=useContext(AccountContext);const {convertCurrency}=useContext(SettingContext);
+ const [shipping,setShipping]=useState({name:"",phone:"",address:"",city:"",state:"",pincode:"",notes:""});
+ const [quote,setQuote]=useState(null);const [quoteError,setQuoteError]=useState("");const [error,setError]=useState("");const [submitting,setSubmitting]=useState(false);
+ const cartKey=useMemo(()=>JSON.stringify(cartProducts.map(i=>({product_id:i.product_id,quantity:i.quantity}))),[cartProducts]);
+ useEffect(()=>{if(accountData)setShipping(old=>({...old,name:old.name||accountData.name,phone:old.phone||accountData.phone||""}));},[accountData]);
+ useEffect(()=>{if(getCartLoading || !cartProducts.length){setQuote(null);return;}const controller=new AbortController();setQuote(null);setQuoteError("");fetch("/api/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:JSON.parse(cartKey)}),signal:controller.signal}).then(async res=>{const data=await res.json();if(!res.ok)throw new Error(data.message||"Unable to confirm prices");setQuote(data);}).catch(e=>{if(e.name!=="AbortError")setQuoteError(e.message);});return()=>controller.abort();},[cartKey,getCartLoading]);
+ const setValue=(field,value)=>setShipping(old=>({...old,[field]:value}));
+ const onSubmit=async e=>{e.preventDefault();if(!quote||submitting||getCartLoading)return;setSubmitting(true);setError("");try{await waitForCartSync();const res=await fetch("/api/order",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({shipping_address:shipping,notes:shipping.notes,payment_method:"cod",items:JSON.parse(cartKey)})});const data=await res.json();if(res.status===401){router.push("/auth/login?next=%2Fcheckout");return;}if(!res.ok){if(res.status===409)await refreshCart();throw new Error(data.message||"Order failed");}clearCart({skipRemote:true});router.replace(`/order/confirmed?order=${encodeURIComponent(data.data.order_number)}`);}catch(e){setError(e.message);}finally{setSubmitting(false);}};
+ const fields=[{key:"name",label:"Full name",autoComplete:"name"},{key:"phone",label:"Phone number",autoComplete:"tel",inputMode:"tel"},{key:"address",label:"Street address / house number",autoComplete:"street-address"},{key:"city",label:"City",autoComplete:"address-level2"},{key:"state",label:"State",autoComplete:"address-level1"},{key:"pincode",label:"PIN code",autoComplete:"postal-code"}];
+ return <><Breadcrumbs title="Checkout" subNavigation={[{name:"Checkout"}]} /><WrapperComponent classes={{sectionClass:"section-b-space checkout-section-2",fluidClass:"container"}} noRowCol={true}><div className="checkout-page checkout-form"><Row className="g-sm-4 g-3"><Col lg="7"><div className="left-sidebar-checkout"><div className="checkout-detail-box"><div className="checkout-form-section theme-card"><h3 className="mb-4">Delivery address</h3><p>Signed in as {accountData?.email}</p><form id="customer-order-form" className="theme-form" onSubmit={onSubmit}>{fields.map(f=><div className="mb-3" key={f.key}><label className="form-label" htmlFor={`checkout-${f.key}`}>{f.label} *</label><input id={`checkout-${f.key}`} className="form-control" autoComplete={f.autoComplete} inputMode={f.inputMode} required value={shipping[f.key]} maxLength={f.key==="address"?500:120} onChange={e=>setValue(f.key,e.target.value)} /></div>)}<div className="mb-3"><label className="form-label" htmlFor="order-notes">Order notes (optional)</label><textarea id="order-notes" className="form-control" rows={3} maxLength={1000} value={shipping.notes} onChange={e=>setValue("notes",e.target.value)} /></div><div className="checkout-detail-box mt-4"><div className="checkout-title"><h4>Payment option</h4></div><div className="payment-option"><label className="form-check-label"><input type="radio" checked readOnly className="form-check-input me-2" /> Cash on Delivery (pay when your order arrives)</label></div></div></form></div></div></div></Col><Col lg="5"><div className="checkout-right-box">{cartProducts.length?<><SidebarProduct quote={quote} /><div className="checkout-details"><div className="order-box"><div className="title-box"><h4>Billing Summary</h4></div><ul className="sub-total"><li>Subtotal <span className="count">{quote?convertCurrency(quote.subtotal):"Checking prices…"}</span></li><li>Shipping <span className="count">{convertCurrency(0)}</span></li></ul><ul className="total"><li className="list-total">Total <span className="count">{quote?convertCurrency(quote.total):"—"}</span></li></ul>{cartSyncError&&<div className="alert alert-danger" role="alert">{cartSyncError} <button type="button" onClick={refreshCart}>Retry cart sync</button></div>}{quoteError&&<div className="alert alert-danger" role="alert">{quoteError}</div>}{error&&<div className="alert alert-danger" role="alert">{error}</div>}<div className="text-end"><button form="customer-order-form" type="submit" className="btn order-btn btn-solid" disabled={!quote||submitting||getCartLoading||!!cartSyncError}>{submitting?"Placing order…":"Place Order"}</button></div></div></div></>:<div className="checkout-details"><h4>{getCartLoading?"Loading cart…":"Your cart is empty"}</h4>{cartSyncError && <div className="alert alert-danger">{cartSyncError} <button type="button" onClick={refreshCart}>Retry cart sync</button></div>}<Link href="/collections" className="btn btn-solid mt-3">Continue shopping</Link></div>}</div></Col></Row></div></WrapperComponent></>;
+};export default CheckoutContent;

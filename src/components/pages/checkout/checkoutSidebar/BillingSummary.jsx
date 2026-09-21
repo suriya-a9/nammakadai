@@ -6,7 +6,6 @@ import React, { useContext } from "react";
 import { useTranslation } from "react-i18next";
 import ApplyCoupon from "./ApplyCoupon";
 import PlaceOrder from "./PlaceOrder";
-import PointWallet from "./PointWallet";
 
 const BillingSummary = ({ data, values, setFieldValue, isLoading, mutate, storeCoupon, setStoreCoupon, errorCoupon, appliedCoupon, setAppliedCoupon, errors }) => {
   const { convertCurrency } = useContext(SettingContext);
@@ -42,7 +41,6 @@ const BillingSummary = ({ data, values, setFieldValue, isLoading, mutate, storeC
                   <span className="count">{convertCurrency("1.99")}</span>
                 </li>
 
-                <PointWallet values={values} setFieldValue={setFieldValue} data={data} />
               </ul>
               <ul className="total">
                 {appliedCoupon == "applied" && data?.data?.total?.coupon_total_discount ? (

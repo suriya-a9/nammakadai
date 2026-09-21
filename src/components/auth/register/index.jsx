@@ -1,14 +1,19 @@
 import Btn from "@/elements/buttons/Btn";
 import { RegisterAPI } from "@/utils/axiosUtils/API";
 import Breadcrumbs from "@/utils/commonComponents/breadcrumb";
-import useCreate from "@/utils/hooks/useCreate";
+import useCustomerAuth from "@/utils/hooks/useCustomerAuth";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import { YupObject, emailSchema, nameSchema, passwordConfirmationSchema, passwordSchema } from "@/utils/validation/ValidationSchema";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import { useTranslation } from "react-i18next";
 import { Button, Col, Container, Row } from "reactstrap";
 
 const RegisterContainer = () => {
-  const { mutate, isLoading } = useCreate(RegisterAPI, false, `/auth/register`, "Register Successfully");
+  const [registerError,setRegisterError] = useState("");
+  const [loginUrl,setLoginUrl]=useState("/auth/login");
+  useEffect(()=>{const next=new URLSearchParams(window.location.search).get("next");if(next?.startsWith("/")&&!next.startsWith("//"))setLoginUrl(`/auth/login?next=${encodeURIComponent(next)}`);},[]);
+  const { mutate, isLoading } = useCustomerAuth("register",setRegisterError);
   const { t } = useTranslation("common");
   return (
     <>
@@ -37,6 +42,7 @@ const RegisterContainer = () => {
                 >
                   {({ errors, touched, setFieldValue }) => (
                     <Form className="theme-form">
+                      {registerError && <div className="alert alert-danger" role="alert">{registerError}</div>}
                       <Row className="form-row">
                         <Col md="4">
                           <label htmlFor="email">{t("FullName")}</label>
@@ -64,6 +70,7 @@ const RegisterContainer = () => {
                         <Btn loading={isLoading} type="submit" className=" btn-solid w-auto">
                           {t("CreateAccount")}
                         </Btn>
+                        <p className="mt-3">Already registered? <Link href={loginUrl}>Login</Link></p>
                       </Row>
                     </Form>
                   )}

@@ -6,9 +6,14 @@ import { YupObject, emailSchema, passwordSchema } from "@/utils/validation/Valid
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import { useTranslation } from "react-i18next";
 import { Col, Container, FormGroup, Row } from "reactstrap";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const LoginContainer = () => {
-  const { mutate } = useHandleLogin();
+  const [loginError,setLoginError] = useState("");
+  const [registerUrl,setRegisterUrl]=useState("/auth/register");
+  useEffect(()=>{const next=new URLSearchParams(window.location.search).get("next");if(next?.startsWith("/")&&!next.startsWith("//"))setRegisterUrl(`/auth/register?next=${encodeURIComponent(next)}`);},[]);
+  const { mutate, isLoading } = useHandleLogin(setLoginError);
   const { t } = useTranslation("common");
   return (
     <>
@@ -21,8 +26,8 @@ const LoginContainer = () => {
               <div className="theme-card">
                 <Formik
                   initialValues={{
-                    email: "john.customer@example.com",
-                    password: "123456789",
+                    email: "",
+                    password: "",
                   }}
                   validationSchema={YupObject({
                     email: emailSchema,
@@ -32,6 +37,7 @@ const LoginContainer = () => {
                 >
                   {({ errors, touched, setFieldValue }) => (
                     <Form className="theme-form">
+                      {loginError && <div className="alert alert-danger" role="alert">{loginError}</div>}
                       <FormGroup>
                         <label htmlFor="email">{t("Email")}</label>
                         <Field name="email" className="form-control" id="email" placeholder="Email" required />
@@ -42,7 +48,7 @@ const LoginContainer = () => {
                         <Field name="password" type="password" className="form-control" id="review" placeholder="Enter your password" required />
                         {errors.password && touched.password && <ErrorMessage name="password" render={(msg) => <div className="invalid-feedback d-block">{errors.password}</div>} />}
                       </FormGroup>
-                      <Btn  type="submit" className="btn-solid">
+                      <Btn loading={isLoading} type="submit" className="btn-solid">
                         {t("Login")}
                       </Btn>
                     </Form>
@@ -55,9 +61,9 @@ const LoginContainer = () => {
               <div className="theme-card authentication-right">
                 <h6 className="title-font">{t("CreateAAccount")}</h6>
                 <p>{t("SignUpDescription")}</p>
-                <a href="#" className="btn btn-solid">
+                <Link href={registerUrl} className="btn btn-solid">
                   {t("CreateAccount")}
-                </a>
+                </Link>
               </div>
             </Col>
           </Row>

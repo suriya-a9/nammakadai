@@ -15,17 +15,17 @@ const EmailPassword = () => {
           <h6>
             {t("Email")} : {accountData?.email}
           </h6>
-          <a href={Href} onClick={() => setModal("email")}>
+          {false && <a href={Href} onClick={() => setModal("email")}>
             {t("Edit")}
-          </a>
+          </a>}
         </div>
         <div className="col-sm-6">
           <h6>
             {t("Password")} : {"●".repeat(6)}
           </h6>
-          <a href={Href} onClick={() => setModal("password")}>
+          {false && <a href={Href} onClick={() => setModal("password")}>
             {t("Edit")}
-          </a>
+          </a>}
         </div>
       </div>
       <EmailPasswordModal modal={modal} setModal={setModal} />

@@ -588,7 +588,7 @@ header {
             transform: translateX(-50%);
             font-size: 8px;
             display: inline-block;
-            text-transform: uppercase;
+            text-transform: none;
             line-height: 16px;
             padding: 0 8px;
             font-weight: 600;
@@ -1496,7 +1496,7 @@ header {
     padding: 2px 7px;
     color: $white;
     border-radius: 0;
-    text-transform: uppercase;
+    text-transform: none;
     font-size: 9px;
     top: -7px;
     right: 3px;

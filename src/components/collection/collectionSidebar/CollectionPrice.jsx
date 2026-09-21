@@ -39,10 +39,10 @@ const CollectionPrice = ({ filter, setFilter, attributeAPIData, isOffCanvas }) =
 
   return (
     <AccordionItem className={`open ${isOffCanvas ? "col-lg-3" : ""}`}>
-      <AccordionHeader targetId={(attributeAPIData?.length + 3).toString()}>
+      <AccordionHeader targetId={"2"}>
         <span>{t("Price")}</span>
       </AccordionHeader>
-      <AccordionBody accordionId={(attributeAPIData?.length + 3).toString()}>
+      <AccordionBody accordionId={"2"}>
         <div className="custom-sidebar-height">
           <ul className="shop-category-list ">
             {FilterPrice.map((price, i) => (

@@ -1423,7 +1423,7 @@
                   .link-section {
                     .submenu-title {
                       h5 {
-                        text-transform: uppercase;
+                        text-transform: none;
                         font-size: 14px;
                         margin-left: -13px;
                       }
@@ -2034,7 +2034,7 @@
                   padding: 20px;
                   color: $theme-font-color;
                   font-weight: 700;
-                  text-transform: uppercase;
+                  text-transform: none;
                   border-bottom: 1px solid #efefef;
                   cursor: pointer;
                   display: flex;
@@ -2513,7 +2513,7 @@
               .sidebar-name {
                 font-size: 18px;
                 padding-left: 5px;
-                text-transform: uppercase;
+                text-transform: none;
               }
             }
           }

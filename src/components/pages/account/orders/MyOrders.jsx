@@ -25,9 +25,6 @@ const MyOrders = () => {
     select: (res) => res?.data,
   });
 
-  useEffect(() => {
-    isLoading && refetch();
-  }, [isLoading]);
 
   if (isLoading)
     return (
@@ -71,7 +68,7 @@ const MyOrders = () => {
 
                           <td>{order.payment_method.toUpperCase()}</td>
                           <td>
-                            <Link href={`/account/order/details/${order.order_number}`}>
+                            <Link href={`/account/order/details/${encodeURIComponent(order.order_number)}`}>
                               <RiEyeLine />
                             </Link>
                           </td>

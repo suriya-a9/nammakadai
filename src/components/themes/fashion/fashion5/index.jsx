@@ -1,5 +1,6 @@
 "use client";
 import ImageLink from "@/components/widgets/imageLink";
+import HomeHeroCarousel from "./HomeHeroCarousel";
 import TitleBox from "@/components/widgets/title";
 import WrapperComponent from "@/components/widgets/WrapperComponent";
 import BlogIdsContext from "@/context/blogIdsContext";
@@ -17,7 +18,7 @@ import HomeProductTab from "../../widgets/HomeProductTab";
 import HomeSocialMedia from "../../widgets/HomeSocialMedia";
 import HomeTitle from "../../widgets/HomeTitle";
 
-const Fashion5 = ({ slug }) => {
+const Fashion5 = ({ slug, homeBanners = [] }) => {
   const { data, isLoading, refetch } = useCustomDataQuery({ params: "fashion_five" });
   const [banners, setBanners] = useState([]);
   const [instagramBanners, setInstagramBanners] = useState(null);
@@ -80,37 +81,10 @@ const Fashion5 = ({ slug }) => {
 
   return (
     <>
-      {/* Home Banner  */}
-      {data?.home_banner?.status && (
-        <div className="home-slider-container">
-          <WrapperComponent classes={{ sectionClass: "p-0" }} noRowCol={true}>
-            <div className="home-slider">
-              <div className="position-relative">
-                <ImageLink imgUrl={data?.home_banner} height={500} width={1905} />
-                <div className="home-skeleton">
-                  <div className="skeleton-content">
-                    <div className="container">
-                      <div className="row">
-                        <div className="col-lg-7 col-sm-8 col-11">
-                          <p className="card-text placeholder-glow row g-lg-4 g-sm-3 g-2">
-                            <span className="col-7">
-                              <span className="placeholder"></span>
-                            </span>
-                            <span className="col-9">
-                              <span className="placeholder"></span>
-                            </span>
-                            <span className="col-6">
-                              <span className="placeholder"></span>
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </WrapperComponent>
+      {/* Homepage hero: use every image found in public/assets/images/banners. */}
+      {homeBanners.length > 0 && (
+        <div className="nk-home-hero">
+          <HomeHeroCarousel banners={homeBanners} />
         </div>
       )}
 

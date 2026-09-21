@@ -1,32 +1,9 @@
-import request from "@/utils/axiosUtils";
-import { SelfAPI } from "@/utils/axiosUtils/API";
-import useFetchQuery from "@/utils/hooks/useFetchQuery";
-import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
+"use client";
+import { useCallback, useEffect, useState } from "react";
 import AccountContext from ".";
-
-const AccountProvider = (props) => {
-  const cookies = Cookies.get("uat");
-  const [mobileSideBar, setMobileSideBar] = useState(false);
-  const [accountData, setAccountData] = useState();
-  const { data, refetch, fetchStatus } = useFetchQuery([SelfAPI], () => request({ url: SelfAPI }), {
-    enabled: false,
-    select: (res) => {
-      return res?.data;
-    },
-  });
-
-  useEffect(() => {
-    cookies && refetch() ;
-  }, [cookies]);
-
-  useEffect(() => {
-    if (data) {
-      setAccountData(data);
-    }
-  }, [fetchStatus == "fetching", data]);
-
-  return <AccountContext.Provider value={{ ...props, accountData, setAccountData, refetch, mobileSideBar, setMobileSideBar }}>{props.children}</AccountContext.Provider>;
-};
-
-export default AccountProvider;
+const AccountProvider=({children})=>{
+ const [accountData,setAccountData]=useState(null);const [mobileSideBar,setMobileSideBar]=useState(false);const [authLoading,setAuthLoading]=useState(true);
+ const refetch=useCallback(async()=>{try{const res=await fetch("/api/self",{credentials:"same-origin",cache:"no-store"});setAccountData(res.ok?await res.json():null);}catch{setAccountData(null);}finally{setAuthLoading(false);}},[]);
+ useEffect(()=>{refetch();const onFocus=()=>{void refetch();};window.addEventListener("focus",onFocus);return ()=>window.removeEventListener("focus",onFocus);},[refetch]);
+ return <AccountContext.Provider value={{accountData,setAccountData,refetch,authLoading,mobileSideBar,setMobileSideBar}}>{children}</AccountContext.Provider>;
+};export default AccountProvider;

@@ -1,7 +1,5 @@
-import OrderDetailsTracking from "@/components/pages/orderDetails/Index";
+import { redirect } from "next/navigation";
 
-const OrderDetails = () => {
-  return <OrderDetailsTracking />;
-};
-
-export default OrderDetails;
+export default function OrderDetails() {
+    redirect("/account/order");
+}

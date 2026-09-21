@@ -1,10 +1,7 @@
-'use client'
-import OrderDetailsContain from "@/components/pages/account/orders/details";
-import { useParams } from "next/navigation";
-
-const OrderDetails = () => {
-  const params = useParams()
-  return <>{params?.orderId && <OrderDetailsContain params={params?.orderId} />}</>;
-};
-
-export default OrderDetails;
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { CUSTOMER_COOKIE, customerFromToken } from "@/lib/customerAuth";
+import prisma from "@/lib/prisma";
+import Link from "next/link";
+export const dynamic="force-dynamic";
+export default async function CustomerOrderDetails({params}){const jar=await cookies();const customer=await customerFromToken(jar.get(CUSTOMER_COOKIE)?.value);if(!customer)redirect("/auth/login?next=%2Faccount%2Forder");const {orderId}=await params;const order=await prisma.order.findFirst({where:{orderNumber:orderId,customerUuid:customer.uuid},include:{items:true}});if(!order)return <div className="container section-t-space section-b-space"><h2>Order not found</h2><Link href="/account/order">My orders</Link></div>;return <div className="container section-t-space section-b-space"><div className="theme-card p-4"><h2>Order #{order.orderNumber}</h2><p>Order status: {order.status} · Payment: {order.paymentStatus} ({order.paymentMethod.toUpperCase()})</p><p>{order.name} · {order.phone}</p><p>{order.address}, {order.city}, {order.state} - {order.pincode}</p><div className="table-responsive"><table className="table"><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead><tbody>{order.items.map(item=><tr key={item.uuid}><td>{item.productName}</td><td>{item.quantity}</td><td>₹{Number(item.unitPrice).toFixed(2)}</td><td>₹{Number(item.lineTotal).toFixed(2)}</td></tr>)}</tbody></table></div><h4>Total: ₹{Number(order.total).toFixed(2)}</h4><Link className="btn btn-solid mt-3" href="/account/order">My orders</Link></div></div>;}

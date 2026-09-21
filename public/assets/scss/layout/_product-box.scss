@@ -221,7 +221,7 @@
         font-weight: 700;
         position: absolute;
         padding: 12px 6px;
-        text-transform: uppercase;
+        text-transform: none;
         color: $white;
         top: 7px;
         left: 7px;
@@ -232,7 +232,7 @@
         position: absolute;
         font-size: 14px;
         font-weight: 700;
-        text-transform: uppercase;
+        text-transform: none;
         writing-mode: vertical-rl;
         transform: rotate(-180deg);
         top: 7px;
@@ -557,7 +557,7 @@
           color: #000000;
           font-size: 20px;
           font-weight: 600;
-          text-transform: uppercase;
+          text-transform: none;
         }
       }
 

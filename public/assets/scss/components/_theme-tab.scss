@@ -127,7 +127,7 @@
 
         a {
             color: $grey-dark;
-            text-transform: uppercase;
+            text-transform: none;
         }
 
         &.border-title {
@@ -144,7 +144,7 @@
     .tab-title2 {
         font-size: 24px;
         font-weight: 700;
-        text-transform: uppercase;
+        text-transform: none;
         margin-top: -8px;
 
         &:after {

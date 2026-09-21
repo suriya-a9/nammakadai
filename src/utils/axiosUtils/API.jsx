@@ -44,6 +44,9 @@ export const SettingAPI = "/settings";
 // Wishlist API
 export const WishlistAPI = "/wishlist";
 
+// Compare API
+export const CompareAPI = "/compare";
+
 // Cart API
 export const AddToCartAPI = "/cart";
 
@@ -53,14 +56,11 @@ export const ContactUsAPI = "/contact-us";
 // Store API
 export const StoreAPI = "/store";
 
-// Compare API
-export const CompareAPI = "/compare";
 
 // Attributes API
 export const AttributesAPI = "/attribute";
 
 // Wallet API
-export const WalletConsumerAPI = "/wallet/consumer";
 
 // Address API
 export const AddressAPI = "/address";
@@ -96,7 +96,6 @@ export const MarkAsReadAPI = "/notifications/markAsRead";
 export const PaymentAccountAPI = "/paymentAccount";
 
 // Points API
-export const PointAPI = "/points/consumer";
 
 // Refund  API
 export const RefundAPI = "/refund";

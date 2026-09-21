@@ -4,9 +4,6 @@ import CartContext from "@/context/cartContext";
 import ProductIdsContext from "@/context/productIdsContext";
 import SettingContext from "@/context/settingContext";
 import Btn from "@/elements/buttons/Btn";
-import { AddToCartAPI } from "@/utils/axiosUtils/API";
-import useCreate from "@/utils/hooks/useCreate";
-import Cookies from "js-cookie";
 import Link from "next/link";
 import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,18 +13,16 @@ import VariantDropDown from "./VariantDropDown";
 const ProductBundle = ({ productState, setProductState }) => {
   const [crossSellProduct, setCrossSellProduct] = useState([]);
   const { t } = useTranslation("common");
-  const isLogin = Cookies.get("uat");
-  const { cartProducts, setCartProducts } = useContext(CartContext);
+  const { handleIncDec } = useContext(CartContext);
   const { convertCurrency } = useContext(SettingContext);
   const { filteredProduct } = useContext(ProductIdsContext);
   const [selectedProductIds, setSelectedProductIds] = useState([]);
-  const { data: addData, mutate, isLoading } = useCreate(AddToCartAPI, false, false, "No");
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [total, setTotal] = useState(0);
 
   const onProductCheck = (event) => {
     event.stopPropagation();
-    const productId = Number(event?.target?.value);
+    const productId = String(event?.target?.value);
     if (event.target.checked) {
       setSelectedProductIds((prev) => [...prev, productId]);
     } else {
@@ -49,26 +44,9 @@ const ProductBundle = ({ productState, setProductState }) => {
     console.log("i am selectes", data);
   }
   const addToCart = (qty, products) => {
-    let cloneCart = [...cartProducts];
-    if (products.length) {
-      products.forEach((elem) => {
-        const index = cloneCart?.findIndex((item) => item?.product_id === elem.id);
-        const productStockQty = cloneCart[index]?.product?.quantity;
-        if (productStockQty < cloneCart[index]?.quantity + qty) {
-          ToastNotification("error", `You can not add more items than available. In stock ${productStockQty} items.`);
-          return false;
-        }
-        if (index !== -1) {
-          let temp = { ...cloneCart[index], quantity: cloneCart[index].quantity + qty, sub_total: (cloneCart[index].quantity + qty) * cloneCart[index]?.product?.sale_price };
-          setCartProducts((prev) => [...prev.filter((value) => value?.product_id !== cloneCart[index]?.product_id), temp]);
-        } else {
-          let params = { product: elem, product_id: elem.id, quantity: qty, sub_total: elem?.sale_price };
-          setCartProducts((prev) => [...prev, params]);
-        }
-        let obj = { product: elem, product_id: elem.id, quantity: qty, sub_total: elem?.sale_price, variation_id: null };
-        isLogin && mutate(obj);
-      });
-    }
+    // Use the same guest/account cart flow as every other Add to Cart button.
+    // Do not post to the removed mock cart API or use demo numeric product IDs.
+    products.forEach((product) => handleIncDec(qty, product));
   };
 
   return (
@@ -105,7 +83,7 @@ const ProductBundle = ({ productState, setProductState }) => {
         </Row>
         <h4 className="bundle-title">{t("ProductSelectedFor")}</h4>
         <h4 className="theme-color total-price">{convertCurrency(total)}</h4>
-        <Btn loading={isLoading} size="xs" disabled={!total} className=" btn-solid bundle-btn mt-0 mt-sm-2 " onClick={(e) => addToCart(1, selectedProducts)}>
+        <Btn loading={false} size="xs" disabled={!total} className=" btn-solid bundle-btn mt-0 mt-sm-2 " onClick={(e) => addToCart(1, selectedProducts)}>
           {t("BuyThisBundle")}
         </Btn>
       </div>

@@ -37,11 +37,11 @@ const SidebarProfile = () => {
           <div className="profile-image">
             <div className="position-relative h-100">
               <Avatar data={accountData?.profile_image} name={accountData?.name} customImageClass={"update_img"} alt="profile-image" height={108} width={108} />
-              <div className="user-icon" onClick={handleImageLabelClick}>
+              {false && <div className="user-icon" onClick={handleImageLabelClick}>
                 <Input type="file" onChange={handleOnChange} innerRef={fileInputRef} className="d-none" accept="image/*" name="imageUpload" />
                 <RiImageEditLine className=" d-lg-block d-none" />
                 <RiPencilFill className="edit-icon d-lg-none" />
-              </div>
+              </div>}
             </div>
           </div>
           {accountData?.profile_image && accountData?.profile_image?.original_url && (

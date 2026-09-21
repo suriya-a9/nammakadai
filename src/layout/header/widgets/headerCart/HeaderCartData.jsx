@@ -1,5 +1,4 @@
 import CartContext from "@/context/cartContext";
-import SettingContext from "@/context/settingContext";
 import ThemeOptionContext from "@/context/themeOptionsContext";
 import { Href } from "@/utils/constants";
 import React, { useContext, useEffect, useState } from "react";
@@ -9,13 +8,8 @@ import HeaderCartBottom from "./HeaderCartBottom";
 
 const HeaderCartData = () => {
   const { themeOption, setCartCanvas, cartCanvas } = useContext(ThemeOptionContext);
-  const { settingData } = useContext(SettingContext);
-  const { cartProducts, getTotal } = useContext(CartContext);
+  const { cartProducts } = useContext(CartContext);
   const { t } = useTranslation("common");
-  const [shippingCal, setShippingCal] = useState(0);
-  const [shippingFreeAmt, setShippingFreeAmt] = useState(0);
-  const [confetti, setConfetti] = useState(0);
-  const confettiItems = Array.from({ length: 150 }, (_, index) => index);
   const [modal, setModal] = useState(false);
   const [cartStyle, setCartStyle] = useState("");
 
@@ -33,36 +27,6 @@ const HeaderCartData = () => {
     };
   }, [themeOption]);
 
-  useEffect(() => {
-    setShippingFreeAmt(settingData?.general?.min_order_free_shipping);
-    cartProducts?.forEach((elem) => {
-      if (elem?.variation) {
-        elem.variation.selected_variation = elem?.variation?.attribute_values?.map((values) => values.value).join("/");
-      }
-    });
-  }, [cartProducts, settingData]);
-
-  useEffect(() => {
-    const total = getTotal(cartProducts);
-    
-    const shippingFreeAmount = settingData?.general?.min_order_free_shipping || shippingFreeAmt;
-    const tempCal = (total * 100) / shippingFreeAmount;
-
-    if (tempCal > 100) {
-      setShippingCal(100);
-      if (confetti === 0) {
-        setConfetti(1);
-        const timer = setTimeout(() => {
-          setConfetti(2);
-        }, 3000);
-        return () => clearTimeout(timer);
-      }
-    } else {
-      setShippingCal(tempCal);
-      setConfetti(0);
-    }
-  }, [ settingData, shippingFreeAmt, getTotal(cartProducts )]);
-
   return (
     <>
       <div id="cart_side" className={`${cartCanvas ? "open-side" : ""} ${cartStyle === "cart_mini" ? "show-div shopping-cart" : "add_to_cart right right-cart-box"}`}>
@@ -78,15 +42,8 @@ const HeaderCartData = () => {
               </a>
             </div>
           </div>
-          <HeaderCartBottom modal={modal} setModal={setModal} shippingCal={shippingCal} shippingFreeAmt={shippingFreeAmt} />
+          <HeaderCartBottom modal={modal} setModal={setModal} />
         </div>
-        {themeOption?.general?.celebration_effect && confetti === 1 && cartCanvas && (
-          <div className="confetti-wrapper show">
-            {confettiItems.map((elem, i) => (
-              <div className={`confetti-${elem}`} key={i}></div>
-            ))}
-          </div>
-        )}
       </div>
     </>
   );

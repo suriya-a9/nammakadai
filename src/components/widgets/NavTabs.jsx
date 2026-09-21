@@ -20,15 +20,14 @@ const NavTabTitles = ({ classes = {}, activeTab, setActiveTab, titleList, isLogo
     }
   };
 
-  const handleLogout = () => {
-    router.push(`/`);
-    setAccountData();
+  const handleLogout = async () => {
+    await fetch("/api/logout", { method: "POST" });
+    setAccountData(null);
     Cookies.remove("uat", { path: "/" });
-    Cookies.remove("ue");
     Cookies.remove("account");
-    Cookies.remove("CookieAccept");
-    localStorage.clear();
     setModal(false);
+    router.push("/");
+    router.refresh();
   };
 
   const onNavClick = (elem, i) => {

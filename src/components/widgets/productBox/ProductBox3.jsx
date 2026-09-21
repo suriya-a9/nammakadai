@@ -3,7 +3,6 @@ import Link from "next/link";
 import React, { useContext } from "react";
 import { useTranslation } from "react-i18next";
 import CartButton from "./widgets/CartButton";
-import CompareButton from "./widgets/hoverButton/CompareButton";
 import QuickViewButton from "./widgets/hoverButton/QuickViewButton";
 import WishlistButton from "./widgets/hoverButton/WishlistButton";
 import ProductBoxVariantAttribute from "./widgets/ProductBoxVariantAttributes";
@@ -67,9 +66,6 @@ const ProductBox3 = ({ productState, setProductState }) => {
         <ul className="cart-detail">
           <li>
             <CartButton productState={productState} selectedVariation={productState.selectedVariation} text="Add to cart" />
-          </li>
-          <li>
-            <CompareButton productstate={productState?.product} text="Compare" />
           </li>
         </ul>
       </div>

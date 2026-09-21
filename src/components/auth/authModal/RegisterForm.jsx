@@ -2,7 +2,7 @@ import SearchableSelectInput from "@/components/widgets/inputFields/SearchableSe
 import { AllCountryCode } from "@/data/CountryCode";
 import Btn from "@/elements/buttons/Btn";
 import { RegisterAPI } from "@/utils/axiosUtils/API";
-import useCreate from "@/utils/hooks/useCreate";
+import useCustomerAuth from "@/utils/hooks/useCustomerAuth";
 import { YupObject, emailSchema, nameSchema, passwordConfirmationSchema, passwordSchema, phoneSchema } from "@/utils/validation/ValidationSchema";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import React, { useState } from "react";
@@ -11,7 +11,7 @@ import { Input } from "reactstrap";
 
 const RegisterForm = () => {
   const [showBoxMessage, setShowBoxMessage] = useState();
-  const { mutate, isLoading } = useCreate(RegisterAPI, false, false, "Register Successfully", false, false, false, false, setShowBoxMessage);
+  const { mutate, isLoading } = useCustomerAuth("register",setShowBoxMessage);
   const { t } = useTranslation("common");
   const [checkboxChecked, setCheckboxChecked] = useState(false);
 

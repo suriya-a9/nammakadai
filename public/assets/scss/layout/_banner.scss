@@ -47,7 +47,7 @@
             font-size: calc(25px + (100 - 25) * ((100vw - 320px) / (1920 - 320)));
             font-weight: 700;
             color: var(--theme-color);
-            text-transform: uppercase;
+            text-transform: none;
             margin-top: calc(-8px + (-15 - -8) * ((100vw - 320px) / (1920 - 320)));
             line-height: 1.4;
         }
@@ -55,7 +55,7 @@
         h3 {
             font-size: calc(22px + (60 - 22) * ((100vw - 320px) / (1920 - 320)));
             color: $font-color;
-            text-transform: uppercase;
+            text-transform: none;
             font-weight: 700;
         }
 
@@ -63,7 +63,7 @@
             font-size: calc(16px + (24 - 16) * ((100vw - 320px) / (1920 - 320)));
             color: $grey;
             font-weight: 600;
-            text-transform: uppercase;
+            text-transform: none;
             letter-spacing: 0.5em;
             padding-top: 10px;
             margin-bottom: -5px;
@@ -240,7 +240,7 @@
         h4 {
             color: var(--theme-color);
             font-weight: 700;
-            text-transform: uppercase;
+            text-transform: none;
             letter-spacing: 0.1em;
             margin-bottom: 0;
             line-height: 28px;
@@ -274,7 +274,7 @@
                 font-size: calc(16px + (18 - 16) * ((100vw - 320px) / (1920 - 320)));
                 color: $white;
                 font-weight: 700;
-                text-transform: uppercase;
+                text-transform: none;
                 letter-spacing: 0.1em;
                 margin-bottom: 0;
             }

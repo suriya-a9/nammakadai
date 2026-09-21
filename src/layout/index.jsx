@@ -25,7 +25,6 @@ const MainLayout = ({ children }) => {
       <QueryClientProvider client={queryClient}>
         <HydrationBoundary state={children.dehydratedState}>
           <SettingProvider>
-            <CompareProvider>
               <CategoryProvider>
                 <BlogProvider>
                   <ThemeOptionProvider>
@@ -38,7 +37,9 @@ const MainLayout = ({ children }) => {
                                 <BrandIdsProvider>
                                   <BlogIdsProvider>
                                     <ProductProvider>
-                                      <SubLayout children={children} />
+                                      <CompareProvider>
+                                        <SubLayout children={children} />
+                                      </CompareProvider>
                                     </ProductProvider>
                                   </BlogIdsProvider>
                                 </BrandIdsProvider>
@@ -51,7 +52,6 @@ const MainLayout = ({ children }) => {
                   </ThemeOptionProvider>
                 </BlogProvider>
               </CategoryProvider>
-            </CompareProvider>
           </SettingProvider>
         </HydrationBoundary>
       </QueryClientProvider>

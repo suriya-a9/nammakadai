@@ -1,7 +1,7 @@
 import ThemeOptionContext from "@/context/themeOptionsContext";
 import { Href } from "@/utils/constants";
 import { t } from "i18next";
-import Cookies from "js-cookie";
+import AccountContext from "@/context/accountContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useContext, useState } from "react";
@@ -10,7 +10,8 @@ import { RiHeartLine, RiHome2Line, RiSearch2Line, RiShoppingBagLine, RiUserLine 
 const MobileMenu = () => {
   const { setOpenAuthModal, setCartCanvas } = useContext(ThemeOptionContext);
 
-  const isAuthenticated = Cookies.get("uat");
+  const { accountData } = useContext(AccountContext);
+  const isAuthenticated = Boolean(accountData);
   const router = useRouter();
   const handleProfileClick = (path) => {
     isAuthenticated ? router.push("/account/dashboard") : setOpenAuthModal(true);

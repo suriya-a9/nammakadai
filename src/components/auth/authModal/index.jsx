@@ -26,7 +26,7 @@ const AuthModal = () => {
     setLogOrNew(!logOrNew);
   };
 
-  const protectedRoutes = [`/account/dashboard`, `/account/notifications`, `/account/wallet`, `/account/bank-details`, `/account/point`, `/account/refund`, `/account/order`, `/account/addresses`, `/wishlist`, `/compare`];
+  const protectedRoutes = [`/account/dashboard`, `/account/notifications`, `/account/bank-details`, `/account/refund`, `/account/order`, `/account/addresses`, `/wishlist`];
 
   useEffect(() => {
     if (state == "forgot") {
@@ -57,9 +57,9 @@ const AuthModal = () => {
                     </div>
                     {state == "register" && <RegisterForm />}
                     {state == "login" && <LoginForm setState={setState} />}
-                    {state == "forgot" && <ForgotPasswordForm setState={setState} />}
+                    {state == "forgot" && <p>Password reset is not configured yet. Please contact support for account recovery.</p>}
                     {state == "otp" && <OTPVerificationForm setState={setState} />}
-                    {state == "number" && <NumberLoginForm setState={setState} />}
+                    {state == "number" && <LoginForm setState={setState} />}
                     {state !== "forgot" && state !== "otp" && (
                       <>
                         <div className="divider">
@@ -71,7 +71,7 @@ const AuthModal = () => {
                             {logOrNew ? t("Login") : t("Register")} {t("Here")}
                           </a>
                         </p>
-                        {state == "login" && (
+                        {false && state == "login" && (
                           <Btn color="transparent" className="number-btn" onClick={() => setState("number")}>
                             <RiSmartphoneLine />
                             {t("LoginWithNumber")}

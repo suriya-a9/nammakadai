@@ -165,7 +165,7 @@ footer {
 
     h4 {
         color: $dark-font;
-        text-transform: uppercase;
+        text-transform: none;
         font-weight: 700;
         display: block;
         margin-bottom: 15px;
@@ -270,7 +270,7 @@ footer {
         h4 {
             color: $dark-font;
             margin-bottom: 14px;
-            text-transform: uppercase;
+            text-transform: none;
             letter-spacing: unset;
             font-weight: 600;
         }
@@ -440,7 +440,7 @@ footer {
 
     h4 {
         color: $white;
-        text-transform: uppercase;
+        text-transform: none;
         font-weight: 700;
         margin-bottom: 0;
         padding-bottom: 25px;

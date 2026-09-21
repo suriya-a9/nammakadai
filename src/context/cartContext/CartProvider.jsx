@@ -1,309 +1,252 @@
-import request from "@/utils/axiosUtils";
-import { AddToCartAPI, ClearCart, ReplaceCartAPI } from "@/utils/axiosUtils/API";
-import getCookie from "@/utils/customFunctions/GetCookie";
-import { ToastNotification } from "@/utils/customFunctions/ToastNotification";
-import useCreate from "@/utils/hooks/useCreate";
-import useDelete from "@/utils/hooks/useDelete";
-import useFetchQuery from "@/utils/hooks/useFetchQuery";
-import { useMutation } from "@tanstack/react-query";
-import Cookies from "js-cookie";
-import React, { useEffect, useMemo, useState } from "react";
+"use client";
+
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import AccountContext from "@/context/accountContext";
 import CartContext from ".";
+import { ToastNotification } from "@/utils/customFunctions/ToastNotification";
 
-const CartProvider = (props) => {
-  const isCookie = Cookies.get("uat");
-  const [cartProducts, setCartProducts] = useState([]);
+const STORAGE_KEY = "nammakadai_cart_v1";
+const MERGE_KEY = "nammakadai_guest_cart_merge_id";
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const validItems = (items) => (Array.isArray(items) ? items : [])
+  .filter((item) => UUID_PATTERN.test(String(item?.product_id || "")) && Number.isSafeInteger(Number(item.quantity)) && Number(item.quantity) > 0)
+  .map((item) => ({ ...item, quantity: Math.min(100, Number(item.quantity)) }));
+const lineTotal = (product, quantity) => Math.round(Number(product?.sale_price ?? product?.price ?? 0) * quantity * 100) / 100;
+const sameItems = (items) => items.map((item) => ({ product_id: item.product_id, quantity: item.quantity }));
+
+const CartProvider = ({ children }) => {
+  const { accountData, authLoading } = useContext(AccountContext);
+  const [cartProducts, updateCartProducts] = useState([]);
+  const [hydrated, setHydrated] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [cartSyncError, setCartSyncError] = useState("");
   const [variationModal, setVariationModal] = useState("");
-  const [cartTotal, setCartTotal] = useState(0);
   const [cartToggle, setCartToggle] = useState(false);
-  const [getCardData, setGetCardData] = useState([]);
+  const [getCardData, setGetCardData] = useState(null);
+  const itemsRef = useRef([]);
+  const scopeRef = useRef(null);
+  const readyRef = useRef(false);
+  const mutationRef = useRef(Promise.resolve());
+  const revisionRef = useRef(0);
 
-  // Getting data from Cart API
-  const { data: CartAPIData, isLoading: getCartLoading, refetch } = useFetchQuery([AddToCartAPI], () => request({ url: AddToCartAPI }), { enabled: false, refetchOnWindowFocus: false, select: (res) => res?.data });
+  const apply = useCallback((items) => {
+    itemsRef.current = items;
+    updateCartProducts(items);
+  }, []);
 
-  // Adding data to Cart API
-  const {
-    data: addData,
-    mutate,
-    isLoading,
-  } = useCreate(AddToCartAPI, false, false, "No", (resDta) => {
-    if (resDta?.status == 200 || resDta?.status == 201) {
-      setGetCardData(resDta?.data?.items[0]);
-      setCartProducts((prevCart) =>
-        prevCart?.map((elem) => {
-          if (!elem?.variation_id && !resDta?.data?.items[0]?.variation_id && elem?.product_id == resDta?.data?.items[0]?.product_id) {
-            return resDta?.data?.items[0];
-          } else return elem;
-        })
-      );
-    }
-  });
-  // Delete Cart API Data
-  const { mutate: deleteCart, isLoading: deleteCartLoader } = useDelete(AddToCartAPI, false);
-
-  // Replace Cart API
-  const { mutate: replaceCartMutate, isLoading: replaceCartLoader } = useCreate(ReplaceCartAPI, false, false, "No");
-
-  //Clear Cart API
-  const { mutate: ClearCartData, isLoading: clearCartLoader } = useMutation({
-    mutationFn: () => request({ url: ClearCart, method: "delete" }),
-    onSuccess: (responseData) => {
-      if (responseData.status === 200 || responseData.status === 201) {
-        ToastNotification("success", responseData.data.message);
-      }
-    },
-  });
-
-  // Refetching Cart API
-  useEffect(() => {
-    if (isCookie) {
-      refetch();
-    }
-  }, [isCookie]);
-
-  // Setting CartAPI data to state and LocalStorage
-  useEffect(() => {
-    if (isCookie) {
-      if (CartAPIData) {
-        setCartProducts(CartAPIData?.items);
-        setCartTotal(CartAPIData?.total);
-      }
-    } else {
-      const isCartAvailable = JSON.parse(localStorage.getItem("cart"));
-      if (isCartAvailable?.items?.length > 0) {
-        setCartProducts(isCartAvailable?.items);
-        setCartTotal(isCartAvailable?.total);
-      }
-    }
-  }, [getCartLoading]);
-
-  // Adding data in localstorage when not Login
-  useEffect(() => {
-    storeInLocalStorage();
-  }, [cartProducts]);
-
-  // Getting total
-  const total = useMemo(() => {
-    return cartProducts?.reduce((prev, curr) => {
-      return prev + Number(curr.sub_total);
-    }, 0);
-  }, [getCartLoading, cartProducts, deleteCartLoader]);
-
-  // Total Function for child components
-  const getTotal = (value) => {
-    return value?.reduce((prev, curr) => {
-      return prev + Number(curr.sub_total);
-    }, 0);
-  };
-
-  const clearCart = () => {
-    setCartProducts([]);
-    if (isCookie) {
-      ClearCartData();
-    }
-  };
-
-  // Remove and Delete cart data from API and State
-  const removeCart = (id, cartId) => {
-    const updatedCart = cartProducts?.filter((item) => (item?.variation_id ? item?.variation_id !== id : item.product_id !== id));
-    setCartProducts(updatedCart);
-  };
-
-  const fetchReplaceCartData = async (obj) => {
+  const readGuest = useCallback(() => {
     try {
-      const res = await fetch(`${process.env.API_PROD_URL}/replace/cart`, {
-        method: "put",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${getCookie("uat")}`,
-        },
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem("cart") || "null");
+      return validItems(Array.isArray(saved) ? saved : saved?.items);
+    } catch { return []; }
+  }, []);
 
-        body: JSON.stringify(obj),
-      });
-      let result = await res.json();
-      return result?.items;
-    } catch (err) {}
-  };
-  const handleIncDec = async (qty, productObj, isProductQty, setIsProductQty, isOpenFun, cloneVariation) => {
-    const updatedQty = (isProductQty ? isProductQty : 0) + qty;
-    const cart = [...cartProducts];
-    const index = cart.findIndex((item) => item.product_id === productObj?.id);
-    let newProduct;
-    const obj = {
-      id: null,
-      product_id: productObj?.id,
-      variation_id: cloneVariation?.selectedVariation?.id ? cloneVariation?.selectedVariation?.id : cart[index]?.variation_id ? cart[index]?.variation_id : null,
-      quantity: qty,
-    };
-    if (isCookie && !isLoading) {
-      if (index !== -1) {
-        obj._method = "PUT";
-      }
-    }
-    const cartUid = newProduct?.find((elem) => (elem?.variation_id ? elem?.variation_id == cloneVariation?.variation_id : elem?.product_id == productObj?.id));
-    let tempProductId = productObj?.id;
-    let tempVariantProductId = cloneVariation?.selectedVariation?.product_id;
-
-    // Checking conditions for Replace Cart
-    if (cart[index]?.variation && cloneVariation?.variation_id && tempProductId == tempVariantProductId && cloneVariation?.variation_id !== cart[index]?.variation_id) {
-      return replaceCart(updatedQty, productObj, cloneVariation);
-    }
-
-    if (index === -1) {
-      const params = {
-        id: cartUid?.id ? cartUid?.id : null,
-        product: productObj,
-        product_id: productObj?.id,
-        variation: cloneVariation?.selectedVariation ? cloneVariation?.selectedVariation : null,
-        variation_id: cloneVariation?.selectedVariation?.id ? cloneVariation?.selectedVariation?.id : null,
-        quantity: cloneVariation?.selectedVariation?.productQty ? cloneVariation?.selectedVariation?.productQty : updatedQty,
-        sub_total: cloneVariation?.selectedVariation?.sale_price ? updatedQty * cloneVariation?.selectedVariation?.sale_price : updatedQty * productObj?.sale_price,
-      };
-      isCookie ? !isLoading && setCartProducts((prev) => [...prev, params]) : setCartProducts((prev) => [...prev, params]);
+  const storeGuest = useCallback((items) => {
+    if (items.length) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ items }));
+      localStorage.setItem(MERGE_KEY, crypto.randomUUID());
     } else {
-      // Checking the Stock QTY of particular product
-      const productStockQty = cart[index]?.variation?.quantity ? cart[index]?.variation?.quantity : cart[index]?.product?.quantity;
-      if (productStockQty < cart[index]?.quantity + qty) {
-        ToastNotification("error", `You can not add more items than available. In stock ${productStockQty} items.`);
-        return false;
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem("cart");
+      localStorage.removeItem(MERGE_KEY);
+    }
+  }, []);
+
+  const api = useCallback(async (method, payload, customerId, query = "") => {
+    const response = await fetch(`/api/cart${query}`, {
+      method, credentials: "same-origin", cache: "no-store",
+      headers: { "Content-Type": "application/json", "x-cart-customer": customerId },
+      ...(payload === undefined ? {} : { body: JSON.stringify(payload) }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Couldn't save your cart. Please try again.");
+    return data.data || [];
+  }, []);
+
+  // Guest carts are browser-local. Once authenticated, the server becomes the source of truth.
+  useEffect(() => { setHydrated(true); }, []);
+  useEffect(() => {
+    if (!hydrated || authLoading) return;
+    const customerId = accountData?.uuid || accountData?.id || null;
+    if (scopeRef.current === customerId && readyRef.current) return;
+    let cancelled = false;
+    scopeRef.current = customerId || "guest";
+    readyRef.current = false;
+    setReady(false);
+    setCartSyncError("");
+    ++revisionRef.current;
+
+    if (!customerId) {
+      apply(readGuest());
+      readyRef.current = true;
+      setReady(true);
+      return;
+    }
+
+    (async () => {
+      try {
+        const guest = readGuest();
+        const pendingMerge = guest.length > 0;
+        let mergeId = localStorage.getItem(MERGE_KEY);
+        if (pendingMerge && !mergeId) {
+          mergeId = crypto.randomUUID();
+          localStorage.setItem(MERGE_KEY, mergeId);
+        }
+        const items = pendingMerge
+          ? await api("POST", { action: "merge", items: sameItems(guest), merge_id: mergeId }, customerId)
+          : await api("GET", undefined, customerId);
+        if (cancelled || scopeRef.current !== customerId) return;
+        // Clear guest data only after the server confirms a successful merge.
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem("cart");
+        localStorage.removeItem(MERGE_KEY);
+        apply(items);
+        readyRef.current = true;
+        setReady(true);
+      } catch (error) {
+        if (!cancelled && scopeRef.current === customerId) {
+          setCartSyncError(error.message);
+          ToastNotification("error", error.message);
+          // Never silently display an empty database cart as a successful sync.
+          setReady(false);
+        }
       }
+    })();
+    return () => { cancelled = true; };
+  }, [hydrated, authLoading, accountData?.uuid, accountData?.id, apply, api, readGuest]);
 
-      if (cart[index]?.variation) {
-        cart[index].variation.selected_variation = cart[index]?.variation?.attribute_values?.map((values) => values.value).join("/");
+  const refetch = useCallback(async () => {
+    const customerId = scopeRef.current;
+    if (!customerId || customerId === "guest") {
+      if (customerId === "guest") apply(readGuest());
+      return;
+    }
+    await mutationRef.current;
+    if (scopeRef.current !== customerId) return;
+    const revision = revisionRef.current;
+    try {
+      // A failed login-time merge must be retried, not replaced with a plain GET.
+      const guest = readGuest();
+      let mergeId = localStorage.getItem(MERGE_KEY);
+      if (guest.length && !mergeId) {
+        mergeId = crypto.randomUUID();
+        localStorage.setItem(MERGE_KEY, mergeId);
       }
-      const newQuantity = cart[index].quantity + qty;
-      if (newQuantity < 1) {
-        // Remove the item from the cart if the new quantity is less than 1
-        return removeCart(cloneVariation?.variation_id ? cloneVariation?.variation_id : productObj?.id, cartUid ? cartUid : cart[index].id);
-      } else {
-        cart[index] = {
-          ...cart[index],
-          id: cartUid?.id ? cartUid?.id : cart[index].id ? cart[index].id : null,
-          quantity: newQuantity,
-          sub_total: newQuantity * (cart[index]?.variation ? cart[index]?.variation?.sale_price : cart[index]?.product?.sale_price),
-        };
-        isCookie ? !isLoading && setCartProducts([...cart]) : setCartProducts([...cart]);
+      const items = guest.length
+        ? await api("POST", { action: "merge", items: sameItems(guest), merge_id: mergeId }, customerId)
+        : await api("GET", undefined, customerId);
+      if (scopeRef.current === customerId && revision === revisionRef.current) {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem("cart");
+        localStorage.removeItem(MERGE_KEY);
+        apply(items);
+        setCartSyncError("");
+        setReady(true);
+        readyRef.current = true;
       }
+    } catch (error) {
+      if (scopeRef.current === customerId) setCartSyncError(error.message);
     }
+  }, [api, apply, readGuest]);
 
-    // Update the productQty state immediately after updating the cartProducts state
-    if (isCookie) {
-      setIsProductQty && !isLoading && setIsProductQty(updatedQty);
-      isOpenFun && !isLoading && isOpenFun(true);
-    } else {
-      setIsProductQty && setIsProductQty(updatedQty);
-      isOpenFun && isOpenFun(true);
+  // Refresh after returning from another device/tab; do not overwrite pending local changes.
+  useEffect(() => {
+    if (!ready || scopeRef.current === "guest") return;
+    const onFocus = () => { void refetch(); };
+    window.addEventListener("focus", onFocus);
+    const onVisibility = () => { if (!document.hidden) onFocus(); };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => { window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onVisibility); };
+  }, [ready, refetch]);
+
+  const commit = useCallback((items, method, body, query = "") => {
+    if (!readyRef.current) return false;
+    const customerId = scopeRef.current;
+    apply(items);
+    if (customerId === "guest") { storeGuest(items); return true; }
+    if (!customerId) return false;
+    const revision = ++revisionRef.current;
+    // Serialize mutations so quick +/-/remove clicks reach PostgreSQL in the same order.
+    mutationRef.current = mutationRef.current.catch(() => {}).then(async () => {
+      if (scopeRef.current !== customerId) return;
+      try {
+        const fromServer = await api(method, body, customerId, query);
+        if (scopeRef.current === customerId && revision === revisionRef.current) {
+          apply(fromServer);
+          setCartSyncError("");
+        }
+      } catch (error) {
+        if (scopeRef.current === customerId) {
+          setCartSyncError(error.message);
+          ToastNotification("error", error.message);
+          // Restore authoritative server state after all queued mutations finish.
+          const currentRevision = revisionRef.current;
+          try {
+            const fromServer = await api("GET", undefined, customerId);
+            if (scopeRef.current === customerId && currentRevision === revisionRef.current) { apply(fromServer); setCartSyncError(""); }
+          } catch { /* Keep the visible error; retry on next focus. */ }
+        }
+      }
+    });
+    return true;
+  }, [api, apply, storeGuest]);
+
+  const setCartProducts = useCallback((updater) => {
+    if (!readyRef.current) return;
+    const items = validItems(typeof updater === "function" ? updater(itemsRef.current) : updater);
+    commit(items, "PUT", { items: sameItems(items) });
+  }, [commit]);
+
+  const removeCart = useCallback((id) => {
+    if (!readyRef.current) return;
+    const item = itemsRef.current.find((row) => row.product_id === id || row.variation_id === id);
+    if (!item) return;
+    commit(itemsRef.current.filter((row) => row.product_id !== item.product_id), "DELETE", undefined,
+      `?product_id=${encodeURIComponent(item.product_id)}`);
+  }, [commit]);
+
+  const clearCart = useCallback((options) => {
+    if (!readyRef.current) return;
+    if (options?.skipRemote === true) {
+      ++revisionRef.current;
+      apply([]);
+      return;
     }
-  };
+    commit([], "DELETE");
+  }, [apply, commit]);
 
-  //Toggle open
-  const cartToggleValue = (value) => {
-    setCartToggle(value);
-  };
+  const handleIncDec = useCallback((delta, productObj, currentQty, setIsProductQty, isOpenFun, variationState) => {
+    if (!readyRef.current) return false;
+    const id = productObj?.id || productObj?.uuid;
+    const change = Number(delta);
+    if (!id || !Number.isSafeInteger(change) || change === 0) return false;
+    const existing = itemsRef.current.find((item) => item.product_id === id);
+    const quantity = (existing?.quantity || 0) + change;
+    const stock = Number(productObj?.quantity ?? existing?.product?.quantity ?? 0);
+    if (quantity > Math.min(stock, 100)) { ToastNotification("error", `Only ${Math.min(stock, 100)} items in stock`); return false; }
+    const product = productObj || existing?.product;
+    const next = quantity <= 0
+      ? itemsRef.current.filter((item) => item.product_id !== id)
+      : existing
+        ? itemsRef.current.map((item) => item.product_id === id ? { ...item, product, quantity, sub_total: lineTotal(product, quantity) } : item)
+        : [...itemsRef.current, { id: null, product_id: id, variation_id: null, variation: null,
+          product, quantity, sub_total: lineTotal(product, quantity) }];
+    if (!commit(next, "POST", { action: "change", product_id: id, delta: change })) return false;
+    if (typeof setIsProductQty === "function") setIsProductQty(Math.max(0, quantity));
+    if (typeof isOpenFun === "function") isOpenFun(true);
+    return true;
+  }, [commit]);
 
-  // Replace Cart
-  const replaceCart = async (updatedQty, productObj, cloneVariation, selectedVariation) => {
-    const cart = [...cartProducts];
-    const isAvailableInCart = cart.find((cartProduct) => cartProduct?.variation_id == cloneVariation.variation_id);
+  const cartTotal = useMemo(() => cartProducts.reduce((sum, item) => sum + Number(item.sub_total || 0), 0), [cartProducts]);
+  const getTotal = useCallback((items) => (items || []).reduce((sum, item) => sum + Number(item.sub_total || 0), 0), []);
+  const waitForCartSync = useCallback(async () => { await mutationRef.current; }, []);
 
-    if (isAvailableInCart) {
-      ToastNotification("error", "You already have this item in your cart.");
-      return false;
-    }
-    const index = cart.findIndex((item) => item.product_id === productObj?.id && item.variation_id == selectedVariation.variation_id);
-    cart[index].quantity = 0;
-
-    const productQty = cart[index]?.variation ? cart[index]?.variation?.quantity : cart[index]?.product?.quantity;
-
-    if (cart[index]?.variation) {
-      cart[index].variation.selected_variation = cart[index]?.variation?.attribute_values?.map((values) => values.value).join("/");
-    }
-
-    // Checking the Stock QTY of particular product
-    if (productQty < cart[index]?.quantity + updatedQty) {
-      ToastNotification("error", `You can not add more items than available. In stock ${productQty} items.`);
-      return false;
-    }
-    let newProduct;
-    if (isCookie && !replaceCartLoader) {
-      newProduct = await fetchReplaceCartData({
-        _method: "PUT",
-        id: cart[index]?.id,
-        product: productObj,
-        product_id: productObj?.id,
-        variation: cloneVariation?.selectedVariation ? cloneVariation?.selectedVariation : null,
-        quantity: cloneVariation?.productQty ? cloneVariation?.productQty : updatedQty,
-        variation_id: cloneVariation?.selectedVariation?.id ? cloneVariation?.selectedVariation?.id : null,
-        quantity: cloneVariation?.productQty ? cloneVariation?.productQty : updatedQty,
-      });
-    }
-    const cartUid = newProduct?.find((elem) => (elem?.variation_id ? elem?.variation_id == cloneVariation?.variation_id : elem?.product_id == productObj?.product?.id));
-
-    const params = {
-      id: cartUid?.id ? cartUid?.id : cart[index].id ? cart[index].id : null,
-      product: productObj,
-      product_id: productObj?.id,
-      variation: cloneVariation?.selectedVariation ? cloneVariation?.selectedVariation : null,
-      variation_id: cloneVariation?.selectedVariation?.id ? cloneVariation?.selectedVariation?.id : null,
-      quantity: cloneVariation?.productQty ? cloneVariation?.productQty : updatedQty,
-      sub_total: cloneVariation?.selectedVariation?.sale_price ? updatedQty * cloneVariation?.selectedVariation?.sale_price : updatedQty * productObj?.sale_price,
-    };
-
-    isCookie
-      ? !isLoading &&
-    setCartProducts((prevCartProducts) =>
-          prevCartProducts.map((elem) => {
-            if (elem?.product_id === cloneVariation?.selectedVariation?.product_id) {
-              return params;
-            } else {
-              return elem;
-            }
-          })
-        )
-      : setCartProducts((prevCartProducts) =>
-          prevCartProducts.map((elem) => {
-            if (elem?.product_id === cloneVariation?.selectedVariation?.product_id) {
-              return params;
-            } else {
-              return elem;
-            }
-          })
-        );
-  };
-
-  // Setting data to localstorage when UAT is not there
-  const storeInLocalStorage = () => {
-    setCartTotal(total);
-    localStorage.setItem("cart", JSON.stringify({ items: cartProducts, total: total }));
-  };
-
-  return (
-    <CartContext.Provider
-      value={{
-        ...props,
-        cartProducts,
-        setCartProducts,
-        cartTotal,
-        getCardData,
-        setCartTotal,
-        removeCart,
-        clearCart,
-        getTotal,
-        handleIncDec,
-        cartToggle,
-        cartToggleValue,
-        variationModal,
-        refetch,
-        setVariationModal,
-        isLoading,
-        getCartLoading,
-        replaceCartLoader,
-        replaceCart,
-      }}
-    >
-      {props.children}
-    </CartContext.Provider>
-  );
+  return <CartContext.Provider value={{ cartProducts, setCartProducts, cartTotal, getCardData, setGetCardData,
+    setCartTotal: () => {}, removeCart, clearCart, getTotal, handleIncDec, cartToggle, cartToggleValue: setCartToggle,
+    variationModal, setVariationModal, refetch, waitForCartSync, cartSyncError, isLoading: false,
+    getCartLoading: authLoading || !ready, replaceCartLoader: false, replaceCart: () => {} }}>
+    {children}
+  </CartContext.Provider>;
 };
 
 export default CartProvider;

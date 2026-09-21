@@ -1185,7 +1185,7 @@ footer {
   .tools-description {
     h3 {
       color: $white;
-      text-transform: uppercase;
+      text-transform: none;
       margin-top: -5px;
     }
 
@@ -1940,7 +1940,7 @@ footer {
 
       h5 {
         margin-bottom: 0;
-        text-transform: uppercase;
+        text-transform: none;
         font-weight: 700;
         color: var(--theme-color);
         margin-top: 15px;
@@ -2796,7 +2796,7 @@ footer {
       font-size: 18px;
       color: #ffffff;
       font-weight: 700;
-      text-transform: uppercase;
+      text-transform: none;
       transform: translate(50%, -50%) rotate(-90deg);
       text-align: center;
       background-color: var(--theme-color);

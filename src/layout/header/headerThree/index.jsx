@@ -2,7 +2,7 @@ import CategoryContext from "@/context/categoryContext";
 import ThemeOptionContext from "@/context/themeOptionsContext";
 import { Href } from "@/utils/constants";
 import { useHeaderScroll } from "@/utils/hooks/HeaderScroll";
-import Cookies from "js-cookie";
+import AccountContext from "@/context/accountContext";
 import { useRouter } from "next/navigation";
 import React, { useContext } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,7 +20,8 @@ const HeaderThree = () => {
   const { t } = useTranslation("common");
   const { categoryAPIData } = useContext(CategoryContext);
   const router = useRouter();
-  const isAuthenticated = Cookies.get("uat");
+  const { accountData } = useContext(AccountContext);
+  const isAuthenticated = Boolean(accountData);
   const handleProfileClick = (path) => {
     isAuthenticated ? router.push("/account/dashboard") : setOpenAuthModal(true);
   };
