@@ -9,11 +9,7 @@ import { Col, Container, FormGroup, Row } from "reactstrap";
 
 const FooterNewsLetter = ({ style }) => {
   const { t } = useTranslation("common");
-  const { mutate, isLoading } = useCreate(SubscribeAPI, false, false, "Subscribed Successfully", (resDta) => {
-    if (resDta?.status == 200 || resDta?.status == 201) {
-      refetch && refetch();
-    }
-  });
+  const { mutate, isLoading } = useCreate(SubscribeAPI, false, false, "Subscribed Successfully");
   const emailValidationSchema = YupObject({ email: emailSchema });
   return (
     <>
@@ -35,8 +31,7 @@ const FooterNewsLetter = ({ style }) => {
                     initialValues={{ email: "" }}
                     validationSchema={emailValidationSchema}
                     onSubmit={(values, { resetForm }) => {
-                      resetForm();
-                      // Put your logic here
+                      mutate(values, { onSuccess: () => resetForm() });
                     }}
                   >
                     {({ errors, touched }) => (
@@ -68,8 +63,7 @@ const FooterNewsLetter = ({ style }) => {
             initialValues={{ email: "" }}
             validationSchema={emailValidationSchema}
             onSubmit={(values, { resetForm }) => {
-              resetForm();
-              // Put your logic here
+              mutate(values, { onSuccess: () => resetForm() });
             }}
           >
             {({ touched, errors }) => (
@@ -97,8 +91,7 @@ const FooterNewsLetter = ({ style }) => {
           }}
           validationSchema={emailValidationSchema}
           onSubmit={(values, { resetForm }) => {
-            resetForm();
-            // Put your logic here
+            mutate(values, { onSuccess: () => resetForm() });
           }}
         >
           {({ touched, errors }) => (

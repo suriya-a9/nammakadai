@@ -4,6 +4,7 @@ import React, { useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { RiDiscountPercentFill, RiStarSFill } from "react-icons/ri";
 import { placeHolderImage } from "../Placeholder";
+import ProductRating from "../productRating";
 import CartButton from "./widgets/CartButton";
 import WishlistButton from "./widgets/hoverButton/WishlistButton";
 import ProductBoxVariantAttribute from "./widgets/ProductBoxVariantAttributes";
@@ -49,7 +50,12 @@ const ProductBox2 = ({ productState, setProductState }) => {
             <a href={`/product/${productState?.product?.slug}`}>
               <h6>{productState?.selectedVariation ? productState?.selectedVariation?.name : productState?.product?.name}</h6>
             </a>
-            <h4 className="price">
+            <div className="rating-w-count namm-product-rating mb-2">
+          <ProductRating totalRating={Number(productState?.product?.rating_count || 0)} />
+          <span>({productState?.product?.reviews_count || 0})</span>
+        </div>
+
+        <h4 className="price">
               {productState?.selectedVariation ? convertCurrency(productState?.selectedVariation.sale_price) : convertCurrency(productState?.product?.sale_price)} {/* Adjust currencySymbol based on your implementation */}
               {(productState?.selectedVariation ? productState?.selectedVariation.discount : productState?.product?.discount) ? (
                 <>

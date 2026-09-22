@@ -9,17 +9,16 @@ import {
   RiAppsLine,
   RiArrowDownSLine,
   RiFolderLine,
+  RiUser3Line,
   RiFullscreenExitLine,
   RiFullscreenFill,
   RiGlobalLine,
   RiHomeLine,
   RiLogoutBoxLine,
-  RiMoonLine,
   RiNotification3Line,
   RiSearchLine,
   RiStore3Line,
   RiSubtractLine,
-  RiSunLine,
 } from "react-icons/ri";
 import { Container } from "reactstrap";
 
@@ -31,19 +30,71 @@ export default function AdminThemeShell({ admin, children }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(pathname.startsWith("/admin/category") || pathname.startsWith("/admin/product"));
-  const [darkMode, setDarkMode] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-
-  useEffect(() => {
-    document.body.classList.toggle("dark-only", darkMode);
-    return () => document.body.classList.remove("dark-only");
-  }, [darkMode]);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [orderNotifications, setOrderNotifications] = useState([]);
+  const [lowStockProducts, setLowStockProducts] = useState([]);
+  const [seenOrders, setSeenOrders] = useState([]);
+  const [adminSearch, setAdminSearch] = useState("");
+  const [adminSearchResults, setAdminSearchResults] = useState([]);
+  const [adminSearching, setAdminSearching] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     setMobileOpen(false);
     if (pathname.startsWith("/admin/category") || pathname.startsWith("/admin/product")) setProductsOpen(true);
   }, [pathname]);
+
+  useEffect(() => {
+    try { setSeenOrders(JSON.parse(localStorage.getItem("nk_admin_seen_orders") || "[]")); } catch {}
+    let alive = true;
+    const loadNotifications = async () => {
+      try {
+        const [orderResponse, productResponse] = await Promise.all([
+          fetch("/api/admin/orders", { cache: "no-store" }),
+          fetch("/api/product?paginate=500&status=1", { cache: "no-store" }),
+        ]);
+        const [orderResult, productResult] = await Promise.all([orderResponse.json(), productResponse.json()]);
+        if (alive && orderResponse.ok) setOrderNotifications((orderResult.data || []).slice(0, 8));
+        if (alive && productResponse.ok) setLowStockProducts((productResult.data || []).filter((product) => Number(product.quantity) < 10).slice(0, 12));
+      } catch {}
+    };
+    loadNotifications();
+    const timer = setInterval(loadNotifications, 20000);
+    return () => { alive = false; clearInterval(timer); };
+  }, []);
+
+  useEffect(() => {
+    const q = adminSearch.trim();
+    if (q.length < 2) { setAdminSearchResults([]); setSearchOpen(false); return; }
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setAdminSearching(true);
+      try {
+        const response = await fetch(`/api/admin/search?q=${encodeURIComponent(q)}`, { cache: "no-store", signal: controller.signal });
+        const result = await response.json();
+        if (response.ok) { setAdminSearchResults(result.data || []); setSearchOpen(true); }
+      } catch (error) { if (error?.name !== "AbortError") setAdminSearchResults([]); }
+      finally { setAdminSearching(false); }
+    }, 250);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [adminSearch]);
+
+  const submitAdminSearch = (event) => {
+    event.preventDefault();
+    if (adminSearchResults[0]) { router.push(adminSearchResults[0].href); setSearchOpen(false); }
+  };
+
+  const unreadOrders = orderNotifications.filter((order) => !seenOrders.includes(order.uuid));
+  const openNotifications = () => {
+    setNotificationOpen((value) => !value);
+    if (!notificationOpen && orderNotifications.length) {
+      const ids = [...new Set([...seenOrders, ...orderNotifications.map((order) => order.uuid)])].slice(-200);
+      setSeenOrders(ids);
+      localStorage.setItem("nk_admin_seen_orders", JSON.stringify(ids));
+    }
+  };
 
   const toggleSidebar = () => {
     if (typeof window !== "undefined" && window.innerWidth <= 991) {
@@ -93,14 +144,24 @@ export default function AdminThemeShell({ admin, children }) {
             </Link>
           </div>
 
-          <form className="form-inline search-full admin-search-static" onSubmit={(event) => event.preventDefault()}>
-            <div className="w-100 position-relative">
+          <form className="form-inline search-full admin-search-static" onSubmit={submitAdminSearch}>
+            <div className="w-100 position-relative admin-global-search">
               <div className="search-icon d-md-flex d-none"><RiSearchLine /></div>
               <div className="Typeahead Typeahead--twitterUsers">
                 <div className="u-posRelative">
-                  <input className="demo-input Typeahead-input form-control-plaintext w-100" type="text" placeholder="Search .." aria-label="Search admin" />
+                  <input className="demo-input Typeahead-input form-control-plaintext w-100" type="search" value={adminSearch} onChange={(e) => setAdminSearch(e.target.value)} onFocus={() => adminSearch.trim().length >= 2 && setSearchOpen(true)} placeholder="Search orders, customers, products..." aria-label="Search admin" autoComplete="off" />
                 </div>
               </div>
+              {searchOpen && (
+                <div className="admin-search-results">
+                  {adminSearching ? <div className="admin-search-state">Searching…</div> : adminSearchResults.length ? adminSearchResults.map((item) => (
+                    <button type="button" key={`${item.type}-${item.id}`} className="admin-search-result" onClick={() => { router.push(item.href); setSearchOpen(false); }}>
+                      <span className="admin-search-result-type">{item.type}</span>
+                      <span className="admin-search-result-copy"><strong>{item.title}</strong><small>{item.subtitle}</small></span>
+                    </button>
+                  )) : <div className="admin-search-state">No results found.</div>}
+                </div>
+              )}
             </div>
           </form>
 
@@ -115,12 +176,29 @@ export default function AdminThemeShell({ admin, children }) {
                   {isFullScreen ? <RiFullscreenExitLine className="header-fullscreen" /> : <RiFullscreenFill className="header-fullscreen" />}
                 </div>
               </li>
-              <li>
-                <div className="notification-box" title="Notifications"><RiNotification3Line /></div>
-              </li>
-              <li>
-                <div className="mode" title="Theme" onClick={() => setDarkMode((value) => !value)} role="button" tabIndex={0}>
-                  {darkMode ? <RiSunLine /> : <RiMoonLine />}
+              <li className="admin-notification-wrap">
+                <button type="button" className="notification-box admin-notification-button" title="Order notifications" onClick={openNotifications}>
+                  <RiNotification3Line />
+                  {(unreadOrders.length + lowStockProducts.length) > 0 && <span className="admin-notification-badge">{(unreadOrders.length + lowStockProducts.length) > 9 ? "9+" : unreadOrders.length + lowStockProducts.length}</span>}
+                </button>
+                <div className={`admin-notification-dropdown ${notificationOpen ? "show" : ""}`}>
+                  <div className="admin-notification-head"><div><strong>Notifications</strong><small>Orders & stock alerts</small></div>{unreadOrders.length > 0 && <span>{unreadOrders.length} new</span>}</div>
+                  <div className="admin-notification-list">
+                    {orderNotifications.length === 0 ? <div className="admin-notification-empty">No order notifications yet.</div> : orderNotifications.map((order) => (
+                      <Link href="/admin/orders" className="admin-notification-item" key={order.uuid} onClick={() => setNotificationOpen(false)}>
+                        <span className="admin-notification-icon"><RiFolderLine /></span>
+                        <span className="admin-notification-copy"><strong>New order · {order.number}</strong><small>{order.name} · ₹{Number(order.total).toFixed(2)}</small><time>{new Date(order.date).toLocaleString()}</time></span>
+                      </Link>
+                    ))}
+                    {lowStockProducts.length > 0 && <div className="admin-stock-alert-heading">Low stock alerts</div>}
+                    {lowStockProducts.map((product) => (
+                      <Link href="/admin/product" className="admin-notification-item admin-low-stock-item" key={`stock-${product.uuid || product.id}`} onClick={() => setNotificationOpen(false)}>
+                        <span className="admin-notification-icon"><RiStore3Line /></span>
+                        <span className="admin-notification-copy"><strong>{product.name}</strong><small>{Number(product.quantity) <= 0 ? "Out of stock" : `Only ${product.quantity} items remaining`}</small></span>
+                      </Link>
+                    ))}
+                  </div>
+                  <Link href="/admin/product" className="admin-notification-footer" onClick={() => setNotificationOpen(false)}>Manage inventory</Link>
                 </div>
               </li>
               <li className="profile-nav onhover-dropdown p-0 me-0">
@@ -167,6 +245,16 @@ export default function AdminThemeShell({ admin, children }) {
                 <li className="sidebar-list">
                   <Link href="/admin/orders" className={`sidebar-link sidebar-title link-nav ${pathname.startsWith("/admin/orders") ? "active" : ""}`}>
                     <div className="svg-icon"><RiFolderLine /></div><span>Customer Orders</span>
+                  </Link>
+                </li>
+                <li className="sidebar-list">
+                  <Link href="/admin/customers" className={`sidebar-link sidebar-title link-nav ${pathname.startsWith("/admin/customers") ? "active" : ""}`}>
+                    <div className="svg-icon"><RiUser3Line /></div><span>Customers</span>
+                  </Link>
+                </li>
+                <li className="sidebar-list">
+                  <Link href="/admin/newsletter" className={`sidebar-link sidebar-title link-nav ${pathname.startsWith("/admin/newsletter") ? "active" : ""}`}>
+                    <div className="svg-icon"><span style={{fontSize: 18}}>✉</span></div><span>Newsletter</span>
                   </Link>
                 </li>
                 <li className="sidebar-list">

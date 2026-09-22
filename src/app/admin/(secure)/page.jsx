@@ -1,68 +1,9 @@
+"use client";
 import Link from "next/link";
-import prisma from "@/lib/prisma";
-import { RiFolderLine, RiCheckboxCircleLine, RiShoppingBag3Line } from "react-icons/ri";
-
-export const dynamic = "force-dynamic";
-
-export default async function AdminDashboard() {
-  const [totalCategories, activeCategories, totalProducts] = await Promise.all([
-    prisma.category.count(),
-    prisma.category.count({ where: { status: true } }),
-    prisma.product.count(),
-  ]);
-
-  return (
-    <>
-      <section className="dashboard-tiles">
-        <div className="container-fluid p-0">
-          <div className="row g-sm-4 g-3">
-            <div className="col-md-5 welcome-tiles admin-dashboard-welcome">
-              <div className="card m-0 position-relative">
-                <img src="/admin-assets/images/bg.jpg" className="img-fluid" alt="Dashboard" />
-                <div className="card-body">
-                  <h2>Welcome Back Admin</h2>
-                  <p>Manage your NammaKadai categories, products and storefront data from one place.</p>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-7">
-              <div className="row g-sm-4 g-3 h-100">
-                <div className="col-sm-4 widget-card-box">
-                  <Link href="/admin/category" className="widget-card card mb-0 admin-metric-card h-100">
-                    <div className="widget-icon"><RiFolderLine /></div>
-                    <div><h6>Total Categories</h6><h2>{totalCategories}</h2></div>
-                  </Link>
-                </div>
-                <div className="col-sm-4 widget-card-box">
-                  <Link href="/admin/category" className="widget-card card mb-0 admin-metric-card h-100">
-                    <div className="widget-icon"><RiCheckboxCircleLine /></div>
-                    <div><h6>Active Categories</h6><h2>{activeCategories}</h2></div>
-                  </Link>
-                </div>
-                <div className="col-sm-4 widget-card-box">
-                  <Link href="/admin/product" className="widget-card card mb-0 admin-metric-card h-100">
-                    <div className="widget-icon"><RiShoppingBag3Line /></div>
-                    <div><h6>Total Products</h6><h2>{totalProducts}</h2></div>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="card-bottom-space mt-4">
-        <div className="card">
-          <div className="card-body">
-            <div className="title-header option-title"><h5>Quick Access</h5></div>
-            <p className="mb-3">Create and manage products or organize your storefront categories.</p>
-            <div className="d-flex gap-2 flex-wrap">
-              <Link href="/admin/product" className="btn btn-primary">Manage Products</Link>
-              <Link href="/admin/category" className="btn btn-outline-primary">Manage Categories</Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
+import { useEffect,useState } from "react";
+import { RiMoneyRupeeCircleLine,RiShoppingBag3Line,RiUser3Line,RiCheckboxCircleLine } from "react-icons/ri";
+const ranges=[['today','Today'],['yesterday','Yesterday'],['week','This Week'],['month','This Month'],['year','This Year'],['custom','Custom Date']];
+const money=v=>`₹${Number(v||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+const label=s=>String(s||'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+export default function AdminDashboard(){const [range,setRange]=useState('today'),[from,setFrom]=useState(''),[to,setTo]=useState(''),[data,setData]=useState(null),[loading,setLoading]=useState(true);useEffect(()=>{if(range==='custom'&&(!from||!to))return;setLoading(true);const q=new URLSearchParams({range});if(from)q.set('from',from);if(to)q.set('to',to);fetch('/api/admin/dashboard?'+q,{cache:'no-store'}).then(r=>r.json()).then(d=>setData(d.data)).finally(()=>setLoading(false))},[range,from,to]);return <><div className="admin-dashboard-heading"><div><h4>Sales Dashboard</h4><p>Track store performance and recent orders.</p></div><div className="admin-range-filter"><select className="form-select" value={range} onChange={e=>setRange(e.target.value)}>{ranges.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select>{range==='custom'&&<><input type="date" className="form-control" value={from} onChange={e=>setFrom(e.target.value)}/><input type="date" className="form-control" value={to} min={from} onChange={e=>setTo(e.target.value)}/></>}</div></div><div className="row g-3 admin-sales-metrics"><Metric icon={<RiMoneyRupeeCircleLine/>} title="Sales" value={loading?'…':money(data?.sales)}/><Metric icon={<RiShoppingBag3Line/>} title="Orders" value={loading?'…':data?.orders??0}/><Metric icon={<RiCheckboxCircleLine/>} title="Delivered" value={loading?'…':data?.delivered??0}/><Metric icon={<RiUser3Line/>} title="New Customers" value={loading?'…':data?.customers??0}/></div><div className="row g-4 mt-1"><div className="col-lg-8"><div className="card h-100"><div className="card-body"><div className="title-header option-title"><h5>Recent Orders</h5><Link href="/admin/orders">View all</Link></div><div className="table-responsive"><table className="table align-middle admin-list-table"><thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Status</th><th>Amount</th></tr></thead><tbody>{(data?.recent||[]).map(o=><tr key={o.uuid}><td><strong>{o.orderNumber}</strong></td><td>{o.name}</td><td>{new Date(o.createdAt).toLocaleDateString()}</td><td><span className={`admin-status-pill status-${o.status}`}>{label(o.status)}</span></td><td><strong>{money(o.total)}</strong></td></tr>)}{!loading&&!data?.recent?.length&&<tr><td colSpan="5" className="text-center py-4">No orders in this period.</td></tr>}</tbody></table></div></div></div></div><div className="col-lg-4"><div className="card h-100"><div className="card-body"><div className="title-header option-title"><h5>Overview</h5></div><div className="admin-overview-list"><div><span>Total Products</span><strong>{data?.products??'—'}</strong></div><div><span>Delivered Orders</span><strong>{data?.delivered??0}</strong></div><div><span>Cancelled Orders</span><strong>{data?.cancelled??0}</strong></div><div><span>Average Order Value</span><strong>{data?.orders?money(data.sales/data.orders):money(0)}</strong></div></div></div></div></div></div></>}
+function Metric({icon,title,value}){return <div className="col-xl-3 col-sm-6"><div className="card admin-sales-card h-100"><div className="card-body"><span className="admin-sales-icon">{icon}</span><div><small>{title}</small><h3>{value}</h3></div></div></div></div>}

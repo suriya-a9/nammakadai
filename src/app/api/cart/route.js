@@ -22,7 +22,7 @@ async function authenticated(request) {
 async function loadCart(customerUuid) {
   const rows = await prisma.customerCartItem.findMany({
     where: { customerUuid },
-    include: { product: { include: { category: true, images: { orderBy: { sortOrder: "asc" } } } } },
+    include: { product: { include: { category: true, images: { orderBy: { sortOrder: "asc" } }, reviews: { include: { customer: { select: { uuid: true, name: true } } }, orderBy: { createdAt: "desc" } } } } },
     orderBy: { createdAt: "asc" },
   });
   const data = rows.map(({ uuid, product, quantity }) => {

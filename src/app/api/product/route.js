@@ -41,6 +41,7 @@ export async function GET(request) {
     const sortBy = searchParams.get("sortBy") || "desc";
     const categoryParam = searchParams.get("category") || searchParams.get("category_ids");
     const idsParam = searchParams.get("ids");
+    const priceParam = searchParams.get("price");
 
     const where = {
       ...(status !== undefined ? { status } : {}),
@@ -53,6 +54,29 @@ export async function GET(request) {
         return NextResponse.json({ current_page: page, last_page: 1, total: 0, per_page: perPage, data: [] });
       }
       where.categoryUuid = { in: categoryIds };
+    }
+
+    if (priceParam) {
+      const ranges = priceParam.split(",").map((value) => value.trim()).filter(Boolean);
+      const priceConditions = [];
+      const effectivePrice = (condition) => ({
+        OR: [
+          { salePrice: { not: null, ...condition } },
+          { salePrice: null, price: condition },
+        ],
+      });
+      for (const range of ranges) {
+        if (range.includes("-")) {
+          const [min, max] = range.split("-").map(Number);
+          if (Number.isFinite(min) && Number.isFinite(max)) priceConditions.push(effectivePrice({ gte: min, lte: max }));
+        } else {
+          const value = Number(range);
+          if (!Number.isFinite(value)) continue;
+          if (value <= 100) priceConditions.push(effectivePrice({ lte: value }));
+          else if (value >= 1000) priceConditions.push(effectivePrice({ gte: value }));
+        }
+      }
+      if (priceConditions.length) where.AND = [{ OR: priceConditions }];
     }
 
     if (idsParam) {
@@ -72,7 +96,7 @@ export async function GET(request) {
     const [rows, total] = await Promise.all([
       prisma.product.findMany({
         where,
-        include: { category: true, images: { orderBy: { sortOrder: "asc" } } },
+        include: { category: true, images: { orderBy: { sortOrder: "asc" } }, reviews: { include: { customer: { select: { uuid: true, name: true } } }, orderBy: { createdAt: "desc" } } },
         orderBy,
         skip: (page - 1) * perPage,
         take: perPage,
@@ -138,7 +162,7 @@ export async function POST(request) {
             }
           : {}),
       },
-      include: { category: true, images: { orderBy: { sortOrder: "asc" } } },
+      include: { category: true, images: { orderBy: { sortOrder: "asc" } }, reviews: { include: { customer: { select: { uuid: true, name: true } } }, orderBy: { createdAt: "desc" } } },
     });
 
     return NextResponse.json({ message: "Product created successfully", data: serializeProduct(product) }, { status: 201 });

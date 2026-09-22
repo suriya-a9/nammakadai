@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { CUSTOMER_COOKIE, customerCookieOptions, createCustomerSession, safeCustomer } from "@/lib/customerAuth";
+import { sendRegistrationEmail } from "@/lib/orderEmail";
 export const runtime = "nodejs";
 export async function POST(request) {
  try {
@@ -13,6 +14,7 @@ export async function POST(request) {
     return NextResponse.json({message:"Valid name, email, matching password of 8–72 characters are required"},{status:422});
   if (await prisma.customer.findUnique({where:{email},select:{uuid:true}})) return NextResponse.json({message:"Email already registered"},{status:409});
   const customer = await prisma.customer.create({data:{name,email,password:await bcrypt.hash(password,12),phone:String(b.phone||"").trim().slice(0,30)||null}});
+  try { await sendRegistrationEmail(customer); } catch (mailError) { console.error("registration email", mailError); }
   const response = NextResponse.json({message:"Account created",data:safeCustomer(customer)},{status:201});
   response.cookies.set(CUSTOMER_COOKIE, await createCustomerSession(customer), customerCookieOptions);
   return response;

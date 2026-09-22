@@ -2,6 +2,7 @@ import SettingContext from "@/context/settingContext";
 import Link from "next/link";
 import React, { useContext } from "react";
 import { useTranslation } from "react-i18next";
+import ProductRating from "../productRating";
 import CartButton from "./widgets/CartButton";
 import ImageVariant from "./widgets/ImageVariant";
 import ProductBoxVariantAttribute from "./widgets/ProductBoxVariantAttributes";
@@ -29,7 +30,12 @@ const ProductBox11 = ({ productState, setProductState }) => {
             <h6>{productState?.selectedVariation ? productState?.selectedVariation.name : productState?.product?.name}</h6>
           </Link>
 
-          <h4 className="price">
+          <div className="rating-w-count namm-product-rating mb-2">
+          <ProductRating totalRating={Number(productState?.product?.rating_count || 0)} />
+          <span>({productState?.product?.reviews_count || 0})</span>
+        </div>
+
+        <h4 className="price">
             {productState?.selectedVariation ? convertCurrency(productState?.selectedVariation.sale_price) : convertCurrency(productState?.product?.sale_price)}
             {productState?.selectedVariation ? (
               productState?.selectedVariation.discount ? (

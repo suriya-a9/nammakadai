@@ -11,7 +11,7 @@ const unauthorized = () => NextResponse.json({ message: "Customer login required
 async function loadWishlist(customerUuid) {
   const rows = await prisma.customerWishlistItem.findMany({
     where: { customerUuid },
-    include: { product: { include: { category: true, images: { orderBy: { sortOrder: "asc" } } } } },
+    include: { product: { include: { category: true, images: { orderBy: { sortOrder: "asc" } }, reviews: { include: { customer: { select: { uuid: true, name: true } } }, orderBy: { createdAt: "desc" } } } } },
     orderBy: { createdAt: "desc" },
   });
   return NextResponse.json({ data: rows.map((row) => ({ ...serializeProduct(row.product), is_wishlist: true, wishlist_id: row.uuid })) },

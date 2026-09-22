@@ -4,7 +4,6 @@ import TextLimit from "@/utils/customFunctions/TextLimit";
 import { useState } from "react";
 import { Col, Row, TabContent, TabPane } from "reactstrap";
 import CustomerReview from "./CustomerReview";
-import QnATab from "./QnATab";
 import { RiArrowDownSLine } from "react-icons/ri";
 import Btn from "@/elements/buttons/Btn";
 
@@ -14,7 +13,6 @@ const ProductDetailsTab = ({ productState }) => {
   const ProductDetailsTabTitle = [
     { id: 1, name: "Description" },
     { id: 2, name: "Review" },
-    { id: 3, name: "QA" },
   ];
 
   const seeMore = () => {
@@ -46,9 +44,6 @@ const ProductDetailsTab = ({ productState }) => {
               )}
             </Row>
           </div>
-        </TabPane>
-        <TabPane className={activeTab == 3 ? "show active" : ""}>
-          <QnATab productState={productState} activeTab={activeTab} />
         </TabPane>
       </TabContent>
     </Col>

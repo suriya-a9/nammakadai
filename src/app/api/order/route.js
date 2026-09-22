@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import prisma from "@/lib/prisma";
 import { customerFromRequest } from "@/lib/customerAuth";
 import { isUuid } from "@/lib/product";
+import { sendNewOrderEmails } from "@/lib/orderEmail";
 export const runtime="nodejs";export const dynamic="force-dynamic";
 const invalid=(message,status=422)=>NextResponse.json({message},{status});
 const serialize=(o)=>({id:o.uuid,uuid:o.uuid,order_number:o.orderNumber,created_at:o.createdAt,total:Number(o.total),subtotal:Number(o.subtotal),status:o.status,payment_status:o.paymentStatus,payment_method:o.paymentMethod,shipping_address:{name:o.name,phone:o.phone,address:o.address,city:o.city,state:o.state,pincode:o.pincode},items:o.items?.map(i=>({name:i.productName,quantity:i.quantity,price:Number(i.unitPrice),total:Number(i.lineTotal)}))});
@@ -42,6 +43,7 @@ export async function POST(request){
     if (cleared.count !== items.length) throw new Error("Your cart changed. Please refresh the cart before placing your order.");
     return placedOrder;
   });
+  try { await sendNewOrderEmails(order, customer.email); } catch (mailError) { console.error("new order email", mailError); }
   return NextResponse.json({message:"Order placed successfully",data:serialize(order)},{status:201});
  }catch(e){if(e?.message?.includes("stock")||e?.message?.includes("available")||e?.message?.includes("price")||e?.message?.includes("cart changed"))return invalid(e.message,409);console.error("place order",e);return invalid("Unable to place order. Please try again.",500);}
 }

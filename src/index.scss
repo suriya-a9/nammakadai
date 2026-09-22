@@ -798,7 +798,7 @@ body {
 
 /* Collection category filter: tall, scrollable and compact nested dropdowns. */
 .nk-collection-filters .nk-category-filter-card .nk-category-scroll {
-  min-height: 380px;
+//   min-height: 380px;
   max-height: min(60vh, 530px);
   overflow-y: auto;
   padding: 2px 8px 8px 0;
@@ -1025,4 +1025,337 @@ body {
   }
   .nk-sub-footer-content { min-height: 58px; padding: 12px 0; }
   .nk-sub-footer-content p { font-size: 12px; line-height: 1.6; }
+}
+
+
+/* NammaKadai storefront header - responsive across desktop, tablet and mobile */
+.header-style-1 .main-menu {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.header-style-1 .main-menu .menu-left {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.header-style-1 .main-menu .brand-logo {
+    flex: 0 0 auto;
+}
+
+.header-style-1 .main-menu .brand-logo img {
+    width: auto !important;
+    max-width: 230px;
+    height: auto !important;
+}
+
+.header-style-1 .main-menu .header-category-nav {
+    margin-left: 18px;
+}
+
+.header-style-1 .main-menu .header-category-nav .category-nav {
+    align-items: center;
+    gap: clamp(12px, 2vw, 32px);
+}
+
+.header-style-1 .main-menu .header-category-nav .category-nav .nav-link {
+    padding: 18px 0;
+    white-space: nowrap;
+}
+
+.header-style-1 .main-menu .menu-right .icon-nav > ul {
+    gap: clamp(10px, 1.4vw, 18px);
+}
+
+.header-style-1 .main-menu .menu-right .icon-nav li {
+    padding: 0 !important;
+}
+
+/* Tablet: use the same clean hamburger navigation as phones so the logo,
+   categories and action icons never collide. */
+@media (max-width: 1199px) {
+    .header-style-1 .main-menu {
+        flex-wrap: nowrap !important;
+        min-height: 78px;
+        gap: 10px;
+        padding: 10px 0 !important;
+    }
+
+    .header-style-1 .main-menu .menu-left {
+        flex: 1 1 auto !important;
+        flex-wrap: nowrap !important;
+        width: auto !important;
+        min-width: 0;
+        padding: 0 !important;
+    }
+
+    .header-style-1 .main-menu .toggle-nav {
+        position: static !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 38px;
+        width: 38px;
+        height: 42px;
+        margin: 0 10px 0 0 !important;
+        padding: 0 !important;
+    }
+
+    .header-style-1 .main-menu .toggle-nav .sidebar-bar {
+        width: 24px;
+        height: 24px;
+    }
+
+    .header-style-1 .main-menu .brand-logo {
+        min-width: 0;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .header-style-1 .main-menu .brand-logo img {
+        max-width: clamp(135px, 21vw, 205px) !important;
+        max-height: 58px;
+        object-fit: contain;
+    }
+
+    .header-style-1 .main-menu .header-category-nav {
+        display: none !important;
+    }
+
+    .header-style-1 .main-menu .menu-right {
+        position: static !important;
+        flex: 0 0 auto;
+        margin-left: auto;
+        transform: none !important;
+    }
+
+    .header-style-1 .main-menu .menu-right .icon-nav > ul {
+        gap: 12px;
+    }
+
+    .header-style-1 .main-menu .menu-right .icon-nav li {
+        display: flex !important;
+        align-items: center;
+        margin: 0 !important;
+    }
+
+    .header-style-1 .main-menu .menu-right .icon-nav li svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .header-style-1 .border-top-cls {
+        border-top: 0 !important;
+    }
+}
+
+@media (max-width: 575px) {
+    .header-style-1 .main-menu {
+        min-height: 66px;
+        gap: 6px;
+        padding: 8px 0 !important;
+    }
+
+    .header-style-1 .main-menu .toggle-nav {
+        flex-basis: 30px;
+        width: 30px;
+        height: 36px;
+        margin-right: 6px !important;
+    }
+
+    .header-style-1 .main-menu .toggle-nav .sidebar-bar {
+        width: 21px;
+        height: 21px;
+    }
+
+    .header-style-1 .main-menu .brand-logo img {
+        max-width: 118px !important;
+        max-height: 46px;
+    }
+
+    .header-style-1 .main-menu .menu-right .icon-nav > ul {
+        gap: 8px;
+    }
+
+    .header-style-1 .main-menu .menu-right .icon-nav li svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+@media (max-width: 390px) {
+    .header-style-1 .main-menu .brand-logo img {
+        max-width: 98px !important;
+    }
+
+    .header-style-1 .main-menu .menu-right .icon-nav > ul {
+        gap: 6px;
+    }
+
+    .header-style-1 .main-menu .menu-right .icon-nav li svg {
+        width: 19px;
+        height: 19px;
+    }
+}
+
+/* Homepage categories: exactly one category card per row on phones. */
+@media (max-width: 575px) {
+    .nk-home-category-grid > [class*="col-"] {
+        flex: 0 0 100% !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .nk-home-category-card {
+        aspect-ratio: 4 / 3;
+    }
+
+    .nk-home-category-image img {
+        object-position: center 18%;
+    }
+
+    .nk-home-category-label {
+        left: 12%;
+        right: 12%;
+        min-height: 44px;
+    }
+
+    .nk-home-category-label span {
+        font-size: 13px;
+    }
+}
+
+
+/* Mobile storefront navigation drawer */
+@media (max-width: 1199px) {
+  .header-style-1 .offcanvas.offcanvas-collapse {
+    display: flex !important;
+    flex-direction: column;
+    position: fixed !important;
+    z-index: 1055 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: auto !important;
+    width: min(86vw, 340px) !important;
+    max-width: 340px !important;
+    height: 100vh !important;
+    visibility: visible !important;
+    background: #fff !important;
+    box-shadow: 8px 0 28px rgba(0,0,0,.14) !important;
+    transform: translateX(-105%) !important;
+    transition: transform .28s ease !important;
+  }
+
+  .header-style-1 .offcanvas.offcanvas-collapse.show {
+    transform: translateX(0) !important;
+  }
+
+  .header-style-1 .offcanvas-collapse .offcanvas-header {
+    display: flex !important;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .header-style-1 .offcanvas-collapse .offcanvas-body {
+    flex: 1 1 auto;
+    padding: 0 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+  }
+
+  .nk-mobile-menu-backdrop {
+    position: fixed;
+    z-index: 1050;
+    inset: 0;
+    background: rgba(0,0,0,.42);
+  }
+}
+
+@media (max-width: 767px) {
+  .header-style-1 .header-category-nav {
+    display: none !important;
+  }
+  .header-style-1 .main-menu .menu-left {
+    flex-wrap: nowrap !important;
+    align-items: center;
+  }
+  .header-style-1 .toggle-nav {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+}
+
+/* Modern admin order notifications */
+.admin-notification-wrap { position: relative; }
+.admin-notification-button { position: relative; border: 0; background: transparent; padding: 0; }
+.admin-notification-badge { position:absolute; top:-8px; right:-9px; min-width:18px; height:18px; padding:0 5px; border-radius:20px; background:#9b0b22; color:#fff; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; border:2px solid #fff; }
+.admin-notification-dropdown { position:absolute; top:calc(100% + 18px); right:-12px; width:min(390px,92vw); background:#fff; border:1px solid #edf0f3; border-radius:14px; box-shadow:0 18px 50px rgba(20,31,45,.16); opacity:0; visibility:hidden; transform:translateY(-8px); transition:.2s ease; overflow:hidden; z-index:1200; }
+.admin-notification-dropdown.show { opacity:1; visibility:visible; transform:translateY(0); }
+.admin-notification-head { padding:16px 18px; display:flex; justify-content:space-between; gap:12px; align-items:center; border-bottom:1px solid #f0f1f3; }
+.admin-notification-head strong,.admin-notification-head small { display:block; }
+.admin-notification-head small { color:#8b929a; margin-top:2px; }
+.admin-notification-head>span { background:#f8e9ec; color:#9b0b22; border-radius:20px; padding:4px 9px; font-size:11px; font-weight:700; }
+.admin-notification-list { max-height:390px; overflow:auto; }
+.admin-notification-item { display:flex; gap:12px; padding:14px 18px; color:#24272b; text-decoration:none; border-bottom:1px solid #f4f4f5; transition:.18s ease; }
+.admin-notification-item:hover { background:#faf6f7; color:#24272b; }
+.admin-notification-icon { width:38px; height:38px; flex:0 0 38px; border-radius:10px; display:flex; align-items:center; justify-content:center; background:#f8e9ec; color:#9b0b22; font-size:18px; }
+.admin-notification-copy { min-width:0; }
+.admin-notification-copy strong,.admin-notification-copy small,.admin-notification-copy time { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.admin-notification-copy small { margin-top:3px; color:#666d75; }
+.admin-notification-copy time { margin-top:4px; color:#a0a5aa; font-size:11px; }
+.admin-notification-empty { padding:30px 18px; text-align:center; color:#8b929a; }
+.admin-notification-footer { display:block; padding:12px 18px; text-align:center; color:#9b0b22; font-weight:600; text-decoration:none; background:#fffafb; }
+.admin-order-status { min-width:140px; max-width:170px; font-size:13px; font-weight:600; border-radius:8px; }
+.admin-order-status.status-delivered { color:#16794b; }
+.admin-order-status.status-cancelled { color:#c02b3b; }
+.admin-order-status.status-shipped { color:#1769aa; }
+@media(max-width:575px){ .admin-notification-dropdown{ position:fixed; top:70px; right:12px; left:12px; width:auto; } }
+
+/* Customer order status badges */
+.order-status-placed { background:#f3f0e8 !important; color:#8a6814 !important; }
+.order-status-confirmed { background:#e9f2ff !important; color:#285ea8 !important; }
+.order-status-processing { background:#fff1dc !important; color:#a45c00 !important; }
+.order-status-shipped { background:#eeeaff !important; color:#5a42a8 !important; }
+.order-status-delivered { background:#e7f7ee !important; color:#24764a !important; }
+.order-status-cancelled { background:#fdebed !important; color:#a51d2d !important; }
+
+/* Admin sales dashboard, filters and customer list */
+.admin-dashboard-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:20px}.admin-dashboard-heading h4{margin:0 0 5px;font-weight:700}.admin-dashboard-heading p{margin:0;color:#818891}.admin-range-filter,.admin-filter-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.admin-range-filter .form-select{min-width:145px}.admin-range-filter .form-control{width:155px}.admin-filter-bar{margin-bottom:18px;padding:14px;background:#fafafa;border:1px solid #eee;border-radius:12px}.admin-filter-bar .form-select{width:165px}.admin-filter-bar .form-control{width:165px}.admin-filter-bar .admin-filter-search{flex:1;min-width:240px}.admin-sales-card{border:1px solid #ececef!important;box-shadow:0 5px 18px rgba(20,30,40,.04)!important}.admin-sales-card .card-body{display:flex;align-items:center;gap:15px;padding:20px}.admin-sales-icon{width:48px;height:48px;border-radius:13px;background:#fff0f2;color:#97051b;display:flex;align-items:center;justify-content:center;font-size:23px}.admin-sales-card small{color:#858b93;font-weight:600}.admin-sales-card h3{margin:4px 0 0;font-size:23px;font-weight:750}.admin-overview-list>div{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #f0f0f0}.admin-overview-list>div:last-child{border:0}.admin-overview-list span{color:#747b84}.admin-status-pill{display:inline-flex;padding:5px 9px;border-radius:20px;background:#f1f2f4;font-size:11px;font-weight:700;text-transform:capitalize}.admin-status-pill.status-delivered{background:#e8f7ef;color:#197449}.admin-status-pill.status-cancelled{background:#fdebed;color:#ad2838}.admin-status-pill.status-shipped{background:#eaf2ff;color:#2664a7}@media(max-width:767px){.admin-dashboard-heading{align-items:stretch;flex-direction:column}.admin-range-filter>*{flex:1;min-width:135px}.admin-filter-bar>*{width:100%!important}.admin-filter-bar .admin-filter-search{min-width:100%}}
+
+/* Functional admin global search */
+.admin-global-search { position: relative; }
+.admin-search-results { position:absolute; top:calc(100% + 12px); left:0; width:min(520px,80vw); background:#fff; border:1px solid #e9edf1; border-radius:14px; box-shadow:0 18px 45px rgba(26,35,46,.15); overflow:hidden; z-index:1300; }
+.admin-search-result { width:100%; border:0; border-bottom:1px solid #f1f2f4; background:#fff; padding:12px 15px; display:flex; align-items:center; gap:12px; text-align:left; }
+.admin-search-result:hover { background:#faf6f7; }
+.admin-search-result-type { min-width:66px; padding:4px 7px; border-radius:20px; background:#f8e9ec; color:#97051b; font-size:10px; font-weight:700; text-align:center; text-transform:uppercase; }
+.admin-search-result-copy { min-width:0; display:flex; flex-direction:column; }
+.admin-search-result-copy strong { color:#24272b; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.admin-search-result-copy small { color:#8a9097; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.admin-search-state { padding:18px; color:#8a9097; font-size:13px; }
+
+/* Storefront mobile drawer rendered at body level so theme wrappers cannot hide it */
+.nk-hamburger-button { border:0; background:transparent; padding:0; }
+.nk-store-mobile-drawer { position:fixed; z-index:10001; top:0; bottom:0; left:0; width:min(86vw,350px); background:#fff; box-shadow:12px 0 40px rgba(0,0,0,.18); transform:translateX(-105%); transition:transform .25s ease; overflow-y:auto; visibility:hidden; }
+.nk-store-mobile-drawer.show { transform:translateX(0); visibility:visible; }
+.nk-store-mobile-backdrop { position:fixed; z-index:10000; inset:0; border:0; padding:0; background:rgba(18,20,24,.48); }
+.nk-store-mobile-head { position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; padding:17px 20px; background:#97051b; color:#fff; }
+.nk-store-mobile-head strong { font-size:17px; }
+.nk-store-mobile-head button { width:36px; height:36px; display:grid; place-items:center; border:0; border-radius:50%; background:rgba(255,255,255,.14); color:#fff; font-size:23px; }
+@media (min-width:1200px) { .nk-hamburger-button { display:none !important; } .nk-store-mobile-drawer,.nk-store-mobile-backdrop { display:none !important; } }
+
+/* Product stock + admin inventory alerts */
+.product-low-stock-notice{margin:14px 0 4px;padding:12px 14px;border:1px solid #f2c5cb;border-radius:10px;background:#fff6f7;color:#97051b;display:flex;flex-direction:column;gap:2px;max-width:460px}.product-low-stock-notice strong{font-size:14px}.product-low-stock-notice span{font-size:12px;color:#6f5357}.admin-stock-alert-heading{padding:9px 16px 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#97051b;background:#fff7f8}.admin-low-stock-item .admin-notification-icon{background:#fff0f2;color:#97051b}.admin-low-stock-banner{border-radius:10px}.admin-stock-low{font-weight:700;color:#b42318}.admin-stock-warning{display:block;color:#b42318;font-size:11px;margin-top:2px}
+
+/* Preserve line breaks entered in Admin > Product description. */
+.product-description .more-text {
+  white-space: pre-line;
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import React, { useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { RiStarSFill } from "react-icons/ri";
+import ProductRating from "../productRating";
 import CartButton from "./widgets/CartButton";
 import ImageVariant from "./widgets/ImageVariant";
 import ProductBoxVariantAttribute from "./widgets/ProductBoxVariantAttributes";
@@ -45,6 +46,11 @@ const ProductBox1 = ({ productState, setProductState }) => {
         <Link href={`/product/${productState?.product?.slug}`}>
           <h6>{productState?.selectedVariation ? productState?.selectedVariation?.name : productState?.product?.name}</h6>
         </Link>
+
+        <div className="rating-w-count namm-product-rating mb-2">
+          <ProductRating totalRating={Number(productState?.product?.rating_count || 0)} />
+          <span>({productState?.product?.reviews_count || 0})</span>
+        </div>
 
         <h4 className="price">
           {productState?.selectedVariation ? convertCurrency(Number(productState?.selectedVariation.sale_price).toFixed(2)) : convertCurrency(Number(productState?.product?.sale_price).toFixed(2))}

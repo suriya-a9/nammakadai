@@ -6,10 +6,8 @@ import { Href } from "@/utils/constants";
 import { useRouter } from "next/navigation";
 import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { RiQuestionnaireLine, RiRulerLine, RiTruckLine } from "react-icons/ri";
+import { RiRulerLine } from "react-icons/ri";
 import AddToCartButton from "./AddToCartButton";
-import DeliveryReturnModal from "./allModal/DeliveryReturnModal";
-import QuestionAnswerModal from "./allModal/QuestionAnswerModal";
 import SizeModal from "./allModal/SizeModal";
 import ProductAttribute from "./productAttribute/ProductAttribute";
 import ProductDetailAction from "./ProductDetailAction";
@@ -18,7 +16,7 @@ const ProductContent = ({ productState, setProductState, productAccordion, noDet
   const { t } = useTranslation("common");
   const { handleIncDec, isLoading } = useContext(CartContext);
   const { convertCurrency } = useContext(SettingContext);
-  const { setCartCanvas, themeOption } = useContext(ThemeOptionContext);
+  const { setCartCanvas } = useContext(ThemeOptionContext);
   const router = useRouter();
   const addToCart = () => {
     setCartCanvas(true);
@@ -31,8 +29,6 @@ const ProductContent = ({ productState, setProductState, productAccordion, noDet
   const [modal, setModal] = useState("");
   const activeModal = {
     size: <SizeModal modal={modal} setModal={setModal} productState={productState} />,
-    delivery: <DeliveryReturnModal modal={modal} setModal={setModal} productState={productState} />,
-    qna: <QuestionAnswerModal modal={modal} setModal={setModal} productState={productState} />,
   };
 
   return (
@@ -64,30 +60,24 @@ const ProductContent = ({ productState, setProductState, productAccordion, noDet
             </h3>
             <span>{t("InclusiveAllTheTax")}</span>
           </div>
+          {Number(productState?.product?.quantity) > 0 && Number(productState?.product?.quantity) < 5 && (
+            <div className="product-low-stock-notice">
+              <strong>Hurry! Only {productState.product.quantity} left in stock</strong>
+              <span>Limited stock available. Order soon.</span>
+            </div>
+          )}
           {productState?.product.short_description && <p className="description-text">{productState?.product.short_description}</p>}
         </>
       )}
-      {!noModals ? (
-        productState?.product?.size_chart_image || productState?.product?.is_return ? (
-          <>
-            <div className="size-delivery-info">
-              {productState?.product?.size_chart_image && productState?.product?.size_chart_image.original_url && (
-                <a href={Href} onClick={() => setModal("size")}>
-                  <RiRulerLine /> {t("SizeChart")}
-                </a>
-              )}
-              {themeOption?.product?.shipping_and_return && productState?.product?.is_return ? (
-                <a href={Href} onClick={() => setModal("delivery")}>
-                  <RiTruckLine /> {t("DeliveryReturn")}
-                </a>
-              ) : null}
-              <a href={Href} onClick={() => setModal("qna")}>
-                <RiQuestionnaireLine /> {t("Askaquestion")}
-              </a>
-            </div>
-            {modal && activeModal[modal]}
-          </>
-        ) : null
+      {!noModals && productState?.product?.size_chart_image?.original_url ? (
+        <>
+          <div className="size-delivery-info">
+            <a href={Href} onClick={(event) => { event.preventDefault(); setModal("size"); }}>
+              <RiRulerLine /> {t("SizeChart")}
+            </a>
+          </div>
+          {modal && activeModal[modal]}
+        </>
       ) : null}
 
       {!noQuantityButtons && (

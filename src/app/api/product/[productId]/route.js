@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAdminRequest } from "@/lib/adminAuth";
+import { customerFromRequest } from "@/lib/customerAuth";
 import { deleteProductImages, MAX_PRODUCT_IMAGES, readProductRequest, saveProductImages } from "@/lib/productImage";
 import { isUuid, makeProductSlug, parseProductStatus, serializeProduct } from "@/lib/product";
 
@@ -12,7 +13,7 @@ const errorResponse = (message, status = 400) => NextResponse.json({ message }, 
 const findProduct = async (value) =>
   prisma.product.findFirst({
     where: isUuid(value) ? { OR: [{ uuid: value }, { slug: value }] } : { slug: value },
-    include: { category: true, images: { orderBy: { sortOrder: "asc" } } },
+    include: { category: true, images: { orderBy: { sortOrder: "asc" } }, reviews: { include: { customer: { select: { uuid: true, name: true } } }, orderBy: { createdAt: "desc" } } },
   });
 
 const parseMoney = (value, field) => {
@@ -23,12 +24,36 @@ const parseMoney = (value, field) => {
   return number;
 };
 
-export async function GET(_request, { params }) {
+export async function GET(request, { params }) {
   try {
     const { productId } = await params;
     const product = await findProduct(productId);
     if (!product) return errorResponse("Product not found", 404);
-    return NextResponse.json(serializeProduct(product));
+
+    const customer = await customerFromRequest(request);
+    let canReview = false;
+    let userReview = null;
+
+    if (customer) {
+      const [purchased, existingReview] = await Promise.all([
+        prisma.order.findFirst({
+          where: {
+            customerUuid: customer.uuid,
+            status: { equals: "delivered", mode: "insensitive" },
+            items: { some: { productUuid: product.uuid } },
+          },
+          select: { uuid: true },
+        }),
+        prisma.productReview.findUnique({
+          where: { productUuid_customerUuid: { productUuid: product.uuid, customerUuid: customer.uuid } },
+          select: { uuid: true, rating: true, description: true },
+        }),
+      ]);
+      canReview = Boolean(purchased);
+      userReview = existingReview;
+    }
+
+    return NextResponse.json({ ...serializeProduct(product), can_review: canReview, user_review: userReview });
   } catch (error) {
     console.error("GET /api/product/:id failed:", error);
     return errorResponse("Failed to load product", 500);

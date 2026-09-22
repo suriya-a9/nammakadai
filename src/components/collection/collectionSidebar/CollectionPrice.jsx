@@ -51,11 +51,11 @@ const CollectionPrice = ({ filter, setFilter, attributeAPIData, isOffCanvas }) =
                 <Label className="form-check-label" htmlFor={`price-${price.id}`}>
                   {price?.price ? (
                     <span className="name">
-                      {price.text} ${price.price}
+                      {price.text} ₹{price.price}
                     </span>
                   ) : (
                     <span className="name">
-                      ${price.minPrice} - ${price.maxPrice}
+                      ₹{price.minPrice} - ₹{price.maxPrice}
                     </span>
                   )}
                 </Label>

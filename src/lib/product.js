@@ -65,6 +65,19 @@ export const serializeProduct = (product) => {
       }
     : null;
 
+  const reviewRows = Array.isArray(product.reviews) ? product.reviews : [];
+  const reviewsCount = reviewRows.length;
+  const ratingCount = reviewsCount ? reviewRows.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviewsCount : 0;
+  const reviewRatings = [1, 2, 3, 4, 5].map((star) => reviewRows.filter((review) => Number(review.rating) === star).length);
+  const reviews = reviewRows.map((review) => ({
+    id: review.uuid,
+    uuid: review.uuid,
+    rating: Number(review.rating),
+    description: review.description || "",
+    created_at: review.createdAt,
+    consumer: { id: review.customer?.uuid, name: review.customer?.name || "Customer", profile_image: null },
+  }));
+
   return {
     id: product.uuid,
     uuid: product.uuid,
@@ -99,9 +112,9 @@ export const serializeProduct = (product) => {
     created_at: product.createdAt,
     updated_at: product.updatedAt,
     orders_count: 0,
-    reviews_count: 0,
-    rating_count: 0,
-    review_ratings: [],
+    reviews_count: reviewsCount,
+    rating_count: ratingCount,
+    review_ratings: reviewRatings,
     related_products: [],
     cross_sell_products: [],
     wholesales: [],
@@ -110,7 +123,8 @@ export const serializeProduct = (product) => {
     tags: [],
     brand: null,
     store: null,
-    reviews: [],
+    reviews,
+    can_review: true,
     similar_products: [],
     cross_products: [],
     category_uuid: product.categoryUuid,

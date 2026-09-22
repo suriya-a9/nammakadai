@@ -48,6 +48,7 @@ model Product {
   images        ProductImage[]
   cartItems     CustomerCartItem[]
   wishlistItems CustomerWishlistItem[]
+  reviews       ProductReview[]
   createdAt     DateTime               @default(now()) @map("created_at")
   updatedAt     DateTime               @updatedAt @map("updated_at")
 
@@ -55,6 +56,24 @@ model Product {
   @@index([status])
   @@index([createdAt])
   @@map("products")
+}
+
+model ProductReview {
+  uuid         String   @id @default(uuid()) @db.Uuid
+  productUuid  String   @map("product_uuid") @db.Uuid
+  customerUuid String   @map("customer_uuid") @db.Uuid
+  rating       Int
+  description  String?  @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  product  Product  @relation(fields: [productUuid], references: [uuid], onDelete: Cascade)
+  customer Customer @relation(fields: [customerUuid], references: [uuid], onDelete: Cascade)
+
+  @@unique([productUuid, customerUuid])
+  @@index([productUuid, createdAt])
+  @@index([customerUuid])
+  @@map("product_reviews")
 }
 
 model ProductImage {
@@ -80,6 +99,7 @@ model Customer {
   cartMerges    CustomerCartMerge[]
   wishlistItems CustomerWishlistItem[]
   addresses     CustomerAddress[]
+  reviews       ProductReview[]
 
   @@map("customers")
 }
@@ -181,4 +201,13 @@ model CustomerWishlistItem {
   @@unique([customerUuid, productUuid])
   @@index([customerUuid, createdAt])
   @@map("customer_wishlist_items")
+}
+
+model NewsletterSubscriber {
+  uuid      String   @id @default(uuid()) @db.Uuid
+  email     String   @unique @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("newsletter_subscribers")
 }

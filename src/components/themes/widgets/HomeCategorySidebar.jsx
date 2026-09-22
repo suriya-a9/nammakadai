@@ -304,7 +304,7 @@ const HomeCategorySidebar = ({ categoryIds, height, width, style, slider, slider
                 const imageUrl = category?.category_image?.original_url || `${ImagePath}/placeholder/category.png`;
 
                 return (
-                  <Col lg="3" md="6" xs="6" key={category?.id || category?.uuid || index}>
+                  <Col lg="3" md="6" xs="12" key={category?.id || category?.uuid || index}>
                     <Link href={`/category/${category?.slug}`} className="nk-home-category-card">
                       <div className="nk-home-category-image">
                         <img src={imageUrl} alt={category?.name || "Category"} />

@@ -47,6 +47,7 @@ const MyOrders = () => {
                         <th>{t("OrderNumber")}</th>
                         <th>{t("Date")}</th>
                         <th>{t("Amount")}</th>
+                        <th>Order Status</th>
                         <th>{t("PaymentStatus")}</th>
                         <th>{t("PaymentMethod")}</th>
                         <th>{t("Option")}</th>
@@ -60,6 +61,9 @@ const MyOrders = () => {
                           </td>
                           <td>{showMonthWiseDateAndTime(order?.created_at)}</td>
                           <td>{convertCurrency(order?.total)} </td>
+                          <td>
+                            <span className={`badge custom-badge rounded-0 order-status-${order?.status || "placed"}`}>{Capitalize((order?.status || "placed").replaceAll("_", " "))}</span>
+                          </td>
                           <td>
                             <div className={`${order.payment_status.toLowerCase() === "pending" ? "badge bg-pending" : order.payment_status.toLowerCase() === "completed" ? "badge bg-completed" : "badge bg-cancelled custom-badge rounded-0"} custom-badge rounded-0`}>
                               <span>{Capitalize(order?.payment_status)}</span>

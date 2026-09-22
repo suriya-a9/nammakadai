@@ -4,7 +4,6 @@ import TextLimit from "@/utils/customFunctions/TextLimit";
 import React, { useState } from "react";
 import { Col, Row, TabContent, TabPane } from "reactstrap";
 import CustomerReview from "../common/CustomerReview";
-import QnATab from "../common/QnATab";
 
 const VerticalProductDetails = ({ productState }) => {
   let [showMore, setShowMore] = useState(false);
@@ -12,7 +11,6 @@ const VerticalProductDetails = ({ productState }) => {
   const ProductDetailsTabTitle = [
     { id: 1, name: "Description" },
     { id: 2, name: "Review" },
-    { id: 3, name: "QA" },
   ];
 
   return (
@@ -37,9 +35,6 @@ const VerticalProductDetails = ({ productState }) => {
                 )}
               </Row>
             </div>
-          </TabPane>
-          <TabPane className={activeTab == 3 ? "show active" : ""}>
-            <QnATab productState={productState} activeTab={activeTab} />
           </TabPane>
         </TabContent>
       </Col>

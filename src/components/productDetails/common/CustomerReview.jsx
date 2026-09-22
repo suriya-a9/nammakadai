@@ -3,7 +3,6 @@ import Btn from "@/elements/buttons/Btn";
 import request from "@/utils/axiosUtils";
 import { ReviewAPI } from "@/utils/axiosUtils/API";
 import useFetchQuery from "@/utils/hooks/useFetchQuery";
-import Cookies from "js-cookie";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RiStarFill } from "react-icons/ri";
@@ -14,9 +13,8 @@ import CustomerQA from "./CustomerQ&A";
 const CustomerReview = ({ productState }) => {
   const { t } = useTranslation("common");
   const [modal, setModal] = useState("");
-  const isLogin = Cookies.get("uat");
   const { data, isLoading, refetch } = useFetchQuery([ReviewAPI], () => request({ url: ReviewAPI, params: { product_id: productState?.product?.id } }), {
-    enabled: isLogin ? (productState?.product?.id ? true : false) : false,
+    enabled: Boolean(productState?.product?.id),
     refetchOnWindowFocus: false,
     select: (res) => res?.data?.data,
   });
@@ -70,13 +68,18 @@ const CustomerReview = ({ productState }) => {
                   <p>{t("Letothercustomersknowwhatyouthink")}.</p>
                   <Btn onClick={() => setModal(productState?.product?.id)} title={productState?.product?.user_review ? t("EditReview") : t("Writeareview")} />
                 </div>
-              ) : null}
+              ) : (
+                <div className="review-title-2 verified-review-note">
+                  <h4 className="fw-bold">Verified buyer reviews</h4>
+                  <p>Only logged-in customers whose order for this product has been delivered can write a review and give a star rating.</p>
+                </div>
+              )}
             </Col>
           </Row>
         </div>
       </Col>
       <ReviewModal modal={modal} setModal={setModal} productState={productState} refetch={refetch} />
-      {(productState?.product?.can_review || productState?.product?.reviews_count) && <CustomerQA data={data} />}
+      <CustomerQA data={data?.length ? data : productState?.product?.reviews} />
     </>
   );
 };

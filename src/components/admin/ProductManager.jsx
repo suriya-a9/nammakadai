@@ -226,6 +226,9 @@ export default function ProductManager() {
   return (
     <div className="card-spacing">
       {(message || error) && <div className={`alert ${error ? "alert-danger" : "alert-success"} mb-4`}>{error || message}</div>}
+      {products.some((product) => Number(product.quantity) < 10) && (
+        <div className="alert alert-warning admin-low-stock-banner mb-4"><strong>Low stock alert:</strong> {products.filter((product) => Number(product.quantity) < 10).length} product(s) have fewer than 10 items remaining.</div>
+      )}
 
       <div className="row g-4">
         <div className="col-12">
@@ -257,7 +260,7 @@ export default function ProductManager() {
                             <td><div className="admin-product-cell"><img src={imageUrl} alt={product.name} /><span>{product.name}</span></div></td>
                             <td>{product.categories?.[0]?.name || "-"}</td>
                             <td>₹{Number(product.sale_price ?? product.price ?? 0).toFixed(2)}</td>
-                            <td>{product.quantity ?? 0}</td>
+                            <td><span className={Number(product.quantity) < 10 ? "admin-stock-low" : ""}>{product.quantity ?? 0}</span>{Number(product.quantity) < 10 ? <small className="admin-stock-warning">Low stock</small> : null}</td>
                             <td><span className={`badge ${isActive(product.status) ? "badge-success" : "badge-danger"}`}>{isActive(product.status) ? "Active" : "Inactive"}</span></td>
                             <td>
                               <div className="admin-product-actions">

@@ -13,7 +13,7 @@ import { ModalFooter } from "reactstrap";
 
 const ReviewModal = ({ modal, setModal, productState, refetch }) => {
   const { t } = useTranslation("common");
-  const { mutate, isLoading } = useCreate(productState?.product?.user_review ? `${ReviewAPI}/${productState?.product.user_review.id}` : ReviewAPI, false, false, false, (resDta) => {
+  const { mutate, isLoading } = useCreate(ReviewAPI, false, false, false, (resDta) => {
     if (resDta.status == 200 || resDta.status == 201) {
       refetch();
       setModal(false);
@@ -27,9 +27,6 @@ const ReviewModal = ({ modal, setModal, productState, refetch }) => {
           rating: nameSchema,
         })}
         onSubmit={(values) => {
-          if (productState?.product?.user_review) {
-            values["_method"] = "PUT";
-          }
           mutate(values);
         }}
       >
