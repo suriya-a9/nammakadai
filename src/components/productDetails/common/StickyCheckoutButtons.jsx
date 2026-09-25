@@ -34,7 +34,7 @@ const StickyCheckoutButtons = ({ productState, setProductState, extraOption, isD
         </>
       ) : null}
 
-      {isDisplay && (
+      {isDisplay && !productState?.product?.attributes?.length && (
         <div>
           <AddToCartButton productState={productState} isLoading={isLoading} addToCart={addToCart} buyNow={buyNow} extraOption={extraOption} />
         </div>

@@ -18,13 +18,19 @@ const ProductContent = ({ productState, setProductState, productAccordion, noDet
   const { convertCurrency } = useContext(SettingContext);
   const { setCartCanvas } = useContext(ThemeOptionContext);
   const router = useRouter();
+  const [selectedAttributes, setSelectedAttributes] = useState({});
+  const assigned = productState?.product?.attributes || [];
+  const selection = assigned.map(a=>({attribute_uuid:a.uuid,name:a.name,value_uuid:selectedAttributes[a.uuid],value:a.values.find(v=>v.uuid===selectedAttributes[a.uuid])?.value})).filter(a=>a.value_uuid);
+  const selectionReady = selection.length===assigned.length;
+  const selectedState = {...productState,selected_attributes:selection};
   const addToCart = () => {
+    if (!selectionReady) { window.alert("Please select all product attributes"); return; }
     setCartCanvas(true);
-    handleIncDec(productState?.productQty, productState?.product, false, false, false, productState);
+    handleIncDec(productState?.productQty, productState?.product, false, false, false, selectedState);
   };
   const buyNow = () => {
-    handleIncDec(productState?.productQty, productState?.product, false, false, false, productState);
-    router.push(`/checkout`);
+    if (!selectionReady) { window.alert("Please select all product attributes"); return; }
+    if (handleIncDec(productState?.productQty, productState?.product, false, false, false, selectedState)) router.push(`/checkout`);
   };
   const [modal, setModal] = useState("");
   const activeModal = {
@@ -87,13 +93,22 @@ const ProductContent = ({ productState, setProductState, productAccordion, noDet
               <p>{productState?.selectedVariation?.short_description ?? productState?.product?.short_description}</p>
             </div>
           )}
+          {assigned.length > 0 && <div className="product-assigned-attributes" style={{marginBottom:16}}>
+            {assigned.map(attribute=><div key={attribute.uuid} style={{marginBottom:12}}>
+              <label htmlFor={`attribute-${attribute.uuid}`} style={{display:"block",fontWeight:600,marginBottom:6}}>{attribute.name} <span aria-hidden="true">*</span></label>
+              <select id={`attribute-${attribute.uuid}`} className="form-select" required value={selectedAttributes[attribute.uuid]||""} onChange={event=>setSelectedAttributes(prev=>({...prev,[attribute.uuid]:event.target.value}))}>
+                <option value="">Select {attribute.name}</option>
+                {attribute.values.map(option=><option key={option.uuid} value={option.uuid}>{option.value}</option>)}
+              </select>
+            </div>)}
+          </div>}
           {productState?.product.status && !productAccordion && <>{productState?.product?.type == "classified" && <ProductAttribute productState={productState} setProductState={setProductState} />}</>}
         </>
       )}
       {!productAccordion && (
         <div className="product-buttons">
           <ProductDetailAction productState={productState} setProductState={setProductState} />
-          <AddToCartButton productState={productState} isLoading={isLoading} addToCart={addToCart} buyNow={buyNow} />
+          <AddToCartButton attributesReady={selectionReady} productState={productState} isLoading={isLoading} addToCart={addToCart} buyNow={buyNow} />
         </div>
       )}
     </>

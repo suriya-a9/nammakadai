@@ -28,7 +28,7 @@ export async function GET(request,{params}){
     payment_status:order.paymentStatus?.toUpperCase(),payment_method:order.paymentMethod,
     amount:Number(order.subtotal),subtotal:Number(order.subtotal),total:Number(order.total),created_at:order.createdAt,
     shipping_address:shipping,billing_address:shipping,
-    products:order.items.map(i=>({id:i.uuid,name:i.productName,quantity:i.quantity,price:Number(i.unitPrice),subtotal:Number(i.lineTotal),pivot:{quantity:i.quantity,subtotal:Number(i.lineTotal)}})),
-    items:order.items.map(i=>({name:i.productName,quantity:i.quantity,price:Number(i.unitPrice),total:Number(i.lineTotal)}))
+    products:order.items.map(i=>({id:i.uuid,name:i.productName + ((i.selectedAttributes||[]).length ? " (" + i.selectedAttributes.map(a=>a.name+": "+a.value).join(", ") + ")" : ""),quantity:i.quantity,price:Number(i.unitPrice),subtotal:Number(i.lineTotal),selected_attributes:i.selectedAttributes||[],pivot:{quantity:i.quantity,subtotal:Number(i.lineTotal),selected_attributes:i.selectedAttributes||[]}})),
+    items:order.items.map(i=>({name:i.productName + ((i.selectedAttributes||[]).length ? " (" + i.selectedAttributes.map(a=>a.name+": "+a.value).join(", ") + ")" : ""),quantity:i.quantity,price:Number(i.unitPrice),total:Number(i.lineTotal),selected_attributes:i.selectedAttributes||[]}))
   }});
 }

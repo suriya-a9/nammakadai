@@ -9,7 +9,7 @@ const HandleQuantity = ({ classes = {}, productObj, elem, customIcon }) => {
   const [productQty, setProductQty] = useState(0);
 
   useEffect(() => {
-    const foundProduct = cartProducts.find((el) => (elem?.variation_id ? elem?.variation_id === el?.variation_id : el.product_id === elem?.product_id));
+    const foundProduct = cartProducts.find(el => elem?.id ? el.id===elem.id : el.product_id===elem?.product_id && (el.selection_key||"")===(elem?.selection_key||""));
     if (foundProduct) {
       setProductQty(foundProduct.quantity);
     } else {

@@ -10,9 +10,9 @@ const FooterUsefulLinks = () => {
 
   return (
     <div className="footer-content">
-      {themeOption?.footer?.useful_link?.length ? (
+      {themeOption?.footer?.useful_link?.filter((item) => !["about us", "about-us", "blogs", "offers"].includes(String(item?.name || "").toLowerCase().trim()) && !["about-us", "blogs", "offers"].includes(String(item?.value || "").toLowerCase().trim()))?.length ? (
         <ul>
-          {themeOption?.footer?.useful_link?.map((item, i) => (
+          {themeOption?.footer?.useful_link?.filter((item) => !["about us", "about-us", "blogs", "offers"].includes(String(item?.name || "").toLowerCase().trim()) && !["about-us", "blogs", "offers"].includes(String(item?.value || "").toLowerCase().trim()))?.map((item, i) => (
             <li key={i}>
               <Link href={`/${item?.value}`}>{t(item?.name)}</Link>
             </li>

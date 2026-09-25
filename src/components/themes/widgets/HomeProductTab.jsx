@@ -73,7 +73,8 @@ const HomeProductTab = ({ categoryIds, slider, style, tab_title_class, tabStyle,
 
   const { data: product, refetch, fetchStatus, isLoading } = useFetchQuery([currentCategory], () => request({ url: ProductAPI, params: { category_ids: currentCategory || customSelectedId, status: 1, paginate: paginate ? paginate : 4 } }, router), { enabled: !!(currentCategory || customSelectedId), refetchOnWindowFocus: false, select: (res) => res?.data?.data });
 
-  const changeTab = (index, category) => {
+  const changeTab = (event, index, category) => {
+    event.preventDefault();
     setActiveTab(index);
     setCurrentCategory(category?.id);
   };
@@ -104,7 +105,7 @@ const HomeProductTab = ({ categoryIds, slider, style, tab_title_class, tabStyle,
             <ul className='tabs tab-title w-bg'>
               {displayCategories?.map((category, index) => (
                 <li key={category.id} className={activeTab === index ? "current" : ""}>
-                  <a href={Href} onClick={() => changeTab(index, category)}>
+                  <a href={Href} onClick={(event) => changeTab(event, index, category)}>
                     {category.name}
                   </a>
                 </li>
@@ -117,7 +118,7 @@ const HomeProductTab = ({ categoryIds, slider, style, tab_title_class, tabStyle,
             <ul className='tabs tab-title'>
               {displayCategories?.map((category, index) => (
                 <li key={category.id} className={activeTab === index ? "current" : ""}>
-                  <a href={Href} onClick={() => changeTab(index, category)}>
+                  <a href={Href} onClick={(event) => changeTab(event, index, category)}>
                     {category.name}
                   </a>
                 </li>
@@ -133,7 +134,7 @@ const HomeProductTab = ({ categoryIds, slider, style, tab_title_class, tabStyle,
             <ul className='tabs tab-title'>
               {displayCategories?.map((category, index) => (
                 <li key={category.id} className={activeTab === index ? "current" : ""}>
-                  <a href={Href} onClick={() => changeTab(index, category)}>
+                  <a href={Href} onClick={(event) => changeTab(event, index, category)}>
                     {category.name}
                   </a>
                 </li>
@@ -144,7 +145,7 @@ const HomeProductTab = ({ categoryIds, slider, style, tab_title_class, tabStyle,
           <ul className={`tabs ${tab_title_class ? tab_title_class : "tab-title"}`}>
             {displayCategories?.map((category, index) => (
               <li key={category.id} className={activeTab === index ? "current" : ""}>
-                <a href={Href} onClick={() => changeTab(index, category)}>
+                <a href={Href} onClick={(event) => changeTab(event, index, category)}>
                   {category.name}
                 </a>
               </li>

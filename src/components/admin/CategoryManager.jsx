@@ -1,5 +1,6 @@
 "use client";
 
+import ListPagination, { PAGE_SIZE } from "@/components/admin/ListPagination";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { RiAddLine, RiDeleteBinLine, RiEdit2Line, RiFolderLine, RiImageLine } from "react-icons/ri";
@@ -30,6 +31,7 @@ const filterCategoryTree = (categories, value) => {
 
 export default function CategoryManager() {
   const router = useRouter();
+  const [page, setPage] = useState(1);
   const [categories, setCategories] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [search, setSearch] = useState("");
@@ -209,6 +211,10 @@ export default function CategoryManager() {
     ...(category.subcategories || []).map((sub) => ({ ...sub, isChild: true, parentName: category.name })),
   ]);
 
+  useEffect(() => { setPage(1); }, [search]);
+  const currentPage = Math.min(page, Math.max(1, Math.ceil(flatRows.length / PAGE_SIZE)));
+  const pagedRows = flatRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   return (
     <div className="card-spacing">
       {(message || error) && <div className={`alert ${error ? "alert-danger" : "alert-success"} mb-4`}>{error || message}</div>}
@@ -222,14 +228,14 @@ export default function CategoryManager() {
           {loading ? <div className="admin-content-loading">Loading categories...</div> : flatRows.length ? (
             <div className="table-responsive"><table className="table all-package theme-table align-middle admin-list-table">
               <thead><tr><th>Category</th><th>Type</th><th>Parent</th><th>Status</th><th>Action</th></tr></thead>
-              <tbody>{flatRows.map((category) => { const uuid=category.uuid||category.id; const active=isActive(category); const imageUrl=category.image_url||category.category_image?.original_url; return (
+              <tbody>{pagedRows.map((category) => { const uuid=category.uuid||category.id; const active=isActive(category); const imageUrl=category.image_url||category.category_image?.original_url; return (
                 <tr key={uuid}>
                   <td><div className="admin-product-cell">{imageUrl?<img src={imageUrl} alt={category.name}/>:<span className="admin-category-thumb admin-category-thumb-empty"><RiImageLine/></span>}<button type="button" className="admin-category-product-link fw-medium" onClick={()=>router.push(`/admin/product?category=${uuid}`)}>{category.name}</button></div></td>
                   <td>{category.isChild ? <span className="badge bg-light text-dark">Subcategory</span> : <span className="badge bg-light text-dark">Main</span>}</td>
                   <td>{category.parentName}</td><td><span className={`badge ${active?"badge-success":"badge-danger"}`}>{active?"Active":"Inactive"}</span></td>
                   <td><div className="admin-product-actions">{!category.isChild&&<button title="Add subcategory" onClick={()=>addSubcategory(category)}><RiAddLine/></button>}<button title="Edit" onClick={()=>editCategory(category)}><RiEdit2Line/></button><button className="delete" title="Delete" onClick={()=>removeCategory(category)}><RiDeleteBinLine/></button></div></td>
                 </tr>);})}</tbody>
-            </table></div>
+            </table><ListPagination page={currentPage} onPageChange={setPage} total={flatRows.length} /></div>
           ) : <div className="admin-empty-category"><RiFolderLine/><div>No categories found</div></div>}
         </div>
       </div>

@@ -12,7 +12,8 @@ const validItems = (items) => (Array.isArray(items) ? items : [])
   .filter((item) => UUID_PATTERN.test(String(item?.product_id || "")) && Number.isSafeInteger(Number(item.quantity)) && Number(item.quantity) > 0)
   .map((item) => ({ ...item, quantity: Math.min(100, Number(item.quantity)) }));
 const lineTotal = (product, quantity) => Math.round(Number(product?.sale_price ?? product?.price ?? 0) * quantity * 100) / 100;
-const sameItems = (items) => items.map((item) => ({ product_id: item.product_id, quantity: item.quantity }));
+const sameItems = (items) => items.map((item) => ({ product_id: item.product_id, quantity: item.quantity, selected_attributes: item.selected_attributes || [] }));
+const identity = item => `${item.product_id}|${(item.selected_attributes || []).map(a=>a.value_uuid).sort().join(":")}`;
 
 const CartProvider = ({ children }) => {
   const { accountData, authLoading } = useContext(AccountContext);
@@ -197,12 +198,12 @@ const CartProvider = ({ children }) => {
     commit(items, "PUT", { items: sameItems(items) });
   }, [commit]);
 
-  const removeCart = useCallback((id) => {
+  const removeCart = useCallback((id, itemId) => {
     if (!readyRef.current) return;
-    const item = itemsRef.current.find((row) => row.product_id === id || row.variation_id === id);
+    const item = itemsRef.current.find((row) => (itemId && row.id === itemId) || (!itemId && (row.product_id === id || row.variation_id === id)));
     if (!item) return;
-    commit(itemsRef.current.filter((row) => row.product_id !== item.product_id), "DELETE", undefined,
-      `?product_id=${encodeURIComponent(item.product_id)}`);
+    commit(itemsRef.current.filter((row) => identity(row) !== identity(item)), "DELETE", undefined,
+      item.id ? `?item_id=${encodeURIComponent(item.id)}` : `?product_id=${encodeURIComponent(item.product_id)}`);
   }, [commit]);
 
   const clearCart = useCallback((options) => {
@@ -220,18 +221,24 @@ const CartProvider = ({ children }) => {
     const id = productObj?.id || productObj?.uuid;
     const change = Number(delta);
     if (!id || !Number.isSafeInteger(change) || change === 0) return false;
-    const existing = itemsRef.current.find((item) => item.product_id === id);
+    const selections = variationState?.selected_attributes || variationState?.selectedAttributes || [];
+    const assigned = productObj?.attributes || [];
+    if (assigned.length && (selections.length !== assigned.length || assigned.some(a=>!selections.some(v=>v.attribute_uuid===a.uuid && a.values.some(option=>option.uuid===v.value_uuid))))) {
+      ToastNotification("error", "Please select all product attributes"); return false;
+    }
+    const requested = {product_id:id,selected_attributes:selections};
+    const existing = itemsRef.current.find(item=>identity(item)===identity(requested));
     const quantity = (existing?.quantity || 0) + change;
+    const totalOther = itemsRef.current.filter(item=>item.product_id===id && identity(item)!==identity(requested)).reduce((n,item)=>n+item.quantity,0);
     const stock = Number(productObj?.quantity ?? existing?.product?.quantity ?? 0);
-    if (quantity > Math.min(stock, 100)) { ToastNotification("error", `Only ${Math.min(stock, 100)} items in stock`); return false; }
+    if (quantity+totalOther > stock || quantity>100) { ToastNotification("error", `Only ${stock} items in stock`); return false; }
     const product = productObj || existing?.product;
     const next = quantity <= 0
-      ? itemsRef.current.filter((item) => item.product_id !== id)
+      ? itemsRef.current.filter(item=>identity(item)!==identity(requested))
       : existing
-        ? itemsRef.current.map((item) => item.product_id === id ? { ...item, product, quantity, sub_total: lineTotal(product, quantity) } : item)
-        : [...itemsRef.current, { id: null, product_id: id, variation_id: null, variation: null,
-          product, quantity, sub_total: lineTotal(product, quantity) }];
-    if (!commit(next, "POST", { action: "change", product_id: id, delta: change })) return false;
+        ? itemsRef.current.map(item=>identity(item)===identity(requested)?{...item,product,quantity,sub_total:lineTotal(product,quantity)}:item)
+        : [...itemsRef.current,{id:null,product_id:id,selection_key:selections.map(a=>a.value_uuid).sort().join(":"),selected_attributes:selections,variation_id:null,variation:null,product,quantity,sub_total:lineTotal(product,quantity)}];
+    if (!commit(next,"POST",{action:"change",product_id:id,selected_attributes:selections,delta:change}))return false;
     if (typeof setIsProductQty === "function") setIsProductQty(Math.max(0, quantity));
     if (typeof isOpenFun === "function") isOpenFun(true);
     return true;

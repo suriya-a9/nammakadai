@@ -3,6 +3,7 @@ import ThemeOptionContext from "@/context/themeOptionsContext";
 import Btn from "@/elements/buttons/Btn";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "next/navigation";
 import { RiAddLine, RiDeleteBinLine, RiSubtractLine } from "react-icons/ri";
 import { Input } from "reactstrap";
 
@@ -11,6 +12,7 @@ const CartButton = ({ productState, text, classes, iconClass = true, quantity = 
   const { cartCanvas, setCartCanvas } = useContext(ThemeOptionContext);
   const [variationModal, setVariationModal] = useState("");
   const { t } = useTranslation("common");
+  const router = useRouter();
   const [productQty, setProductQty] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -51,6 +53,7 @@ const CartButton = ({ productState, text, classes, iconClass = true, quantity = 
                   id={`add-to-cart${productState?.product?.id}`}
                   className="add-button add_cart"
                   onClick={() => {
+                    if (productState?.product?.attributes?.length) { router.push(`/product/${productState.product.slug}`); return; }
                     setCartCanvas(true);
                     handleIncDec(1, productState?.product, productQty, setProductQty, setIsOpen, getSelectedVariant ? getSelectedVariant : null);
                   }}
@@ -70,6 +73,7 @@ const CartButton = ({ productState, text, classes, iconClass = true, quantity = 
                       type="button"
                       className="btn quantity-left-minus"
                       onClick={() => {
+                        if (productState?.product?.attributes?.length) { router.push(`/product/${productState.product.slug}`); return; }
                         setCartCanvas(true);
                         handleIncDec(-1, productState?.product, productQty, setProductQty, setIsOpen, getSelectedVariant ? getSelectedVariant : null);
                       }}
@@ -81,6 +85,7 @@ const CartButton = ({ productState, text, classes, iconClass = true, quantity = 
                       type="button"
                       className="btn quantity-right-plus"
                       onClick={() => {
+                        if (productState?.product?.attributes?.length) { router.push(`/product/${productState.product.slug}`); return; }
                         setCartCanvas(true);
                         handleIncDec(1, productState?.product, productQty, setProductQty, setIsOpen, getSelectedVariant ? getSelectedVariant : null);
                       }}
@@ -98,6 +103,7 @@ const CartButton = ({ productState, text, classes, iconClass = true, quantity = 
               className={`${classes ? classes : ""}  ${productQty > 0 ? "active" : ""}`}
               iconClass={iconClass ? iconClass : <RiAddLine />}
               onClick={() => {
+                if (productState?.product?.attributes?.length) { router.push(`/product/${productState.product.slug}`); return; }
                 productState?.product?.external_url ? window.open(productState?.product?.external_url, "_blank") : setCartCanvas(true);
                 handleIncDec(1, productState?.product, productQty, setProductQty, setIsOpen, productState);
                 productState?.product?.type === "classified" ? setVariationModal(productState?.product?.id) : setCartCanvas(!cartCanvas);

@@ -65,6 +65,18 @@ export const serializeProduct = (product) => {
       }
     : null;
 
+  const categoryLinks = Array.isArray(product.categoryLinks) ? product.categoryLinks : [];
+  const categories = categoryLinks.length ? categoryLinks.map((link) => ({
+    id: link.category.uuid, uuid: link.category.uuid, name: link.category.name,
+    slug: link.category.uuid, status: link.category.status ? 1 : 0,
+    parent_id: link.category.parentUuid || null, parent_uuid: link.category.parentUuid || null,
+  })) : category ? [category] : [];
+  const productAttributes = {};
+  for (const link of product.attributeValues || []) {
+    const attribute = link.value.attribute;
+    if (!productAttributes[attribute.uuid]) productAttributes[attribute.uuid] = {uuid:attribute.uuid,name:attribute.name,values:[]};
+    productAttributes[attribute.uuid].values.push({uuid:link.value.uuid,value:link.value.value});
+  }
   const reviewRows = Array.isArray(product.reviews) ? product.reviews : [];
   const reviewsCount = reviewRows.length;
   const ratingCount = reviewsCount ? reviewRows.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviewsCount : 0;
@@ -128,7 +140,8 @@ export const serializeProduct = (product) => {
     similar_products: [],
     cross_products: [],
     category_uuid: product.categoryUuid,
-    categories: category ? [category] : [],
+    categories,
+    attributes: Object.values(productAttributes),
     product_thumbnail: thumbnail,
     product_galleries: gallery,
   };

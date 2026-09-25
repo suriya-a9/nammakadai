@@ -53,6 +53,7 @@ const SelectedCart = ({ modal, setSelectedVariation, setModal }) => {
                 <div className="media-body">
                   <Link href={`/product/${elem?.product?.slug}`}>
                     <h4>{elem?.variation?.name ?? elem?.product?.name}</h4>
+                    {(elem.selected_attributes||[]).map(a=><small key={a.attribute_uuid} style={{display:"block"}}>{a.name}: {a.value}</small>)}
                   </Link>
                   <h4 className="quantity">
                     <span>{convertCurrency(elem?.variation?.sale_price ?? elem?.product?.sale_price)}</span>

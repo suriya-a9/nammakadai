@@ -1,30 +1,3 @@
-import NoDataFound from "@/components/widgets/NoDataFound";
-import ThemeOptionContext from "@/context/themeOptionsContext";
 import Link from "next/link";
-import React, { useContext } from "react";
-import { useTranslation } from "react-i18next";
-
-const FooterHelpCenter = () => {
-  const { themeOption } = useContext(ThemeOptionContext);
-  const { t } = useTranslation("common");
-
-  return (
-    <div className="footer-content">
-      {themeOption?.footer?.help_center?.length ? (
-        <ul>
-          {themeOption?.footer?.help_center?.map((item, i) => (
-            <li key={i}>
-              <Link href={item?.value?.charAt(0) == "/" ? item?.value : `/${item?.value}`} className="text-content">
-                {t(item?.name)}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <NoDataFound customClass={"no-data-footer"} title={"No Link Found"} />
-      )}
-    </div>
-  );
-};
-
-export default FooterHelpCenter;
+const policies = [{ label: "Refund Policy", href: "/refund-policy" }, { label: "Cancellation Policy", href: "/cancellation-policy" }, { label: "Privacy Policy", href: "/privacy-policy" }];
+export default function FooterHelpCenter() { return <div className="footer-content"><ul>{policies.map((p) => <li key={p.href}><Link href={p.href} className="text-content">{p.label}</Link></li>)}</ul></div>; }

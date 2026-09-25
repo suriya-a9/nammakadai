@@ -8,14 +8,15 @@ datasource db {
 }
 
 model Category {
-  uuid          String     @id @default(uuid()) @db.Uuid
-  name          String     @db.VarChar(255)
-  status        Boolean    @default(true)
-  imageUrl      String?    @map("image_url") @db.Text
-  parentUuid    String?    @map("parent_uuid") @db.Uuid
-  parent        Category?  @relation("CategoryChildren", fields: [parentUuid], references: [uuid], onDelete: Cascade)
-  subcategories Category[] @relation("CategoryChildren")
+  uuid          String            @id @default(uuid()) @db.Uuid
+  name          String            @db.VarChar(255)
+  status        Boolean           @default(true)
+  imageUrl      String?           @map("image_url") @db.Text
+  parentUuid    String?           @map("parent_uuid") @db.Uuid
+  parent        Category?         @relation("CategoryChildren", fields: [parentUuid], references: [uuid], onDelete: Cascade)
+  subcategories Category[]        @relation("CategoryChildren")
   products      Product[]
+  productLinks  ProductCategory[]
 
   @@index([status])
   @@index([parentUuid])
@@ -34,23 +35,25 @@ model Admin {
 }
 
 model Product {
-  uuid          String                 @id @default(uuid()) @db.Uuid
-  name          String                 @db.VarChar(255)
-  slug          String                 @unique @db.VarChar(255)
-  description   String?                @db.Text
-  price         Decimal                @db.Decimal(12, 2)
-  salePrice     Decimal?               @map("sale_price") @db.Decimal(12, 2)
-  quantity      Int                    @default(0)
-  status        Boolean                @default(true)
-  imageUrl      String?                @map("image_url") @db.Text
-  categoryUuid  String                 @map("category_uuid") @db.Uuid
-  category      Category               @relation(fields: [categoryUuid], references: [uuid], onDelete: Cascade)
-  images        ProductImage[]
-  cartItems     CustomerCartItem[]
-  wishlistItems CustomerWishlistItem[]
-  reviews       ProductReview[]
-  createdAt     DateTime               @default(now()) @map("created_at")
-  updatedAt     DateTime               @updatedAt @map("updated_at")
+  uuid            String                  @id @default(uuid()) @db.Uuid
+  name            String                  @db.VarChar(255)
+  slug            String                  @unique @db.VarChar(255)
+  description     String?                 @db.Text
+  price           Decimal                 @db.Decimal(12, 2)
+  salePrice       Decimal?                @map("sale_price") @db.Decimal(12, 2)
+  quantity        Int                     @default(0)
+  status          Boolean                 @default(true)
+  imageUrl        String?                 @map("image_url") @db.Text
+  categoryUuid    String                  @map("category_uuid") @db.Uuid
+  category        Category                @relation(fields: [categoryUuid], references: [uuid], onDelete: Cascade)
+  categoryLinks   ProductCategory[]
+  attributeValues ProductAttributeValue[]
+  images          ProductImage[]
+  cartItems       CustomerCartItem[]
+  wishlistItems   CustomerWishlistItem[]
+  reviews         ProductReview[]
+  createdAt       DateTime                @default(now()) @map("created_at")
+  updatedAt       DateTime                @updatedAt @map("updated_at")
 
   @@index([categoryUuid])
   @@index([status])
@@ -157,6 +160,7 @@ model OrderItem {
   quantity    Int
   unitPrice   Decimal @map("unit_price") @db.Decimal(12, 2)
   lineTotal   Decimal @map("line_total") @db.Decimal(12, 2)
+  selectedAttributes Json @default("[]") @map("selected_attributes")
 
   @@index([orderUuid])
   @@map("order_items")
@@ -168,12 +172,14 @@ model CustomerCartItem {
   customerUuid String   @map("customer_uuid") @db.Uuid
   productUuid  String   @map("product_uuid") @db.Uuid
   quantity     Int
+  selectionKey String @default("") @map("selection_key") @db.VarChar(1000)
+  selectedAttributes Json @default("[]") @map("selected_attributes")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
   customer     Customer @relation(fields: [customerUuid], references: [uuid], onDelete: Cascade)
   product      Product  @relation(fields: [productUuid], references: [uuid], onDelete: Cascade)
 
-  @@unique([customerUuid, productUuid])
+  @@unique([customerUuid, productUuid, selectionKey])
   @@index([customerUuid])
   @@map("customer_cart_items")
 }
@@ -210,4 +216,55 @@ model NewsletterSubscriber {
 
   @@index([createdAt])
   @@map("newsletter_subscribers")
+}
+
+// Extra categories supplement the existing primary category for backwards compatibility.
+model ProductCategory {
+  productUuid  String   @map("product_uuid") @db.Uuid
+  categoryUuid String   @map("category_uuid") @db.Uuid
+  product      Product  @relation(fields: [productUuid], references: [uuid], onDelete: Cascade)
+  category     Category @relation(fields: [categoryUuid], references: [uuid], onDelete: Cascade)
+
+  @@id([productUuid, categoryUuid])
+  @@index([categoryUuid])
+  @@map("product_categories")
+}
+
+model Attribute {
+  uuid   String           @id @default(uuid()) @db.Uuid
+  name   String           @unique @db.VarChar(100)
+  values AttributeValue[]
+
+  @@map("attributes")
+}
+
+model AttributeValue {
+  uuid          String                  @id @default(uuid()) @db.Uuid
+  attributeUuid String                  @map("attribute_uuid") @db.Uuid
+  value         String                  @db.VarChar(100)
+  attribute     Attribute               @relation(fields: [attributeUuid], references: [uuid], onDelete: Cascade)
+  products      ProductAttributeValue[]
+
+  @@unique([attributeUuid, value])
+  @@map("attribute_values")
+}
+
+model ProductAttributeValue {
+  productUuid String         @map("product_uuid") @db.Uuid
+  valueUuid   String         @map("value_uuid") @db.Uuid
+  product     Product        @relation(fields: [productUuid], references: [uuid], onDelete: Cascade)
+  value       AttributeValue @relation(fields: [valueUuid], references: [uuid], onDelete: Cascade)
+
+  @@id([productUuid, valueUuid])
+  @@map("product_attribute_values")
+}
+
+model StorePolicy {
+  uuid      String   @id @default(uuid()) @db.Uuid
+  slug      String   @unique @db.VarChar(60)
+  title     String   @db.VarChar(150)
+  content   String   @default("") @db.Text
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("store_policies")
 }

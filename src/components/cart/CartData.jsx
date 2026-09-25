@@ -26,6 +26,7 @@ const CartData = ({ elem }) => {
       <CartProductDetail elem={elem} />
       <td>
         <Link href={`/product/${elem?.product?.slug}`}>{elem?.variation?.name ?? elem?.product?.name}</Link>
+        {(elem.selected_attributes||[]).map(a=><small key={a.attribute_uuid} style={{display:"block"}}>{a.name}: {a.value}</small>)}
         <Row className="mobile-cart-content">
           <Col>
             <div className="qty-box">

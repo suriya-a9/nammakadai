@@ -8,15 +8,20 @@ const DropdownAttribute = ({ elem, soldOutAttributesIds, productState, setVarian
     const index = elem?.attribute_values?.findIndex((value) =>
       productState?.variantIds?.includes(value.id)
     );
-    if (index !== -1) {
-      setSelectedIndex(index.toString());
+    if (typeof index === "number" && index >= 0) {
+      setSelectedIndex(String(index));
+    } else {
+      setSelectedIndex("");
     }
   }, [productState?.variantIds, elem]);
 
   const handleChange = (e) => {
     const index = e.target.value;
     setSelectedIndex(index);
-    setVariant(productState?.product?.variations, elem?.attribute_values[index]);
+    const selectedValue = elem?.attribute_values?.[Number(index)];
+    if (selectedValue) {
+      setVariant(productState?.product?.variations, selectedValue);
+    }
   };
 
   return (

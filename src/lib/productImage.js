@@ -75,6 +75,8 @@ export const readProductRequest = async (request) => {
       quantity: formData.get("quantity"),
       status: formData.get("status"),
       category_uuid: formData.get("category_uuid"),
+      category_uuids: formData.getAll("category_uuids"),
+      attribute_value_uuids: formData.has("attribute_selection_present") ? formData.getAll("attribute_value_uuids") : undefined,
       images,
       remove_image_ids: formData.getAll("remove_image_ids").map(String).filter(Boolean),
       remove_image: formData.get("remove_image"),

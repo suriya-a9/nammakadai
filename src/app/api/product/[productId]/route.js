@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { parseIds, validateAssignments } from "@/lib/productAssignments";
 import { requireAdminRequest } from "@/lib/adminAuth";
 import { customerFromRequest } from "@/lib/customerAuth";
 import { deleteProductImages, MAX_PRODUCT_IMAGES, readProductRequest, saveProductImages } from "@/lib/productImage";
@@ -13,7 +14,7 @@ const errorResponse = (message, status = 400) => NextResponse.json({ message }, 
 const findProduct = async (value) =>
   prisma.product.findFirst({
     where: isUuid(value) ? { OR: [{ uuid: value }, { slug: value }] } : { slug: value },
-    include: { category: true, images: { orderBy: { sortOrder: "asc" } }, reviews: { include: { customer: { select: { uuid: true, name: true } } }, orderBy: { createdAt: "desc" } } },
+    include: { category: true, categoryLinks: {include:{category:true}}, attributeValues:{include:{value:{include:{attribute:true}}}}, images: { orderBy: { sortOrder: "asc" } }, reviews: { include: { customer: { select: { uuid: true, name: true } } }, orderBy: { createdAt: "desc" } } },
   });
 
 const parseMoney = (value, field) => {
@@ -71,6 +72,11 @@ const updateProduct = async (request, params) => {
     if (!existing) return errorResponse("Product not found", 404);
 
     const body = await readProductRequest(request);
+    const categoryIds = body.category_uuids !== undefined ? parseIds(body.category_uuids) : null;
+    const attributeValueIds = body.attribute_value_uuids !== undefined ? parseIds(body.attribute_value_uuids) : null;
+    if (categoryIds !== null || attributeValueIds !== null) {
+      await validateAssignments(prisma, categoryIds ?? (existing.categoryLinks.length ? existing.categoryLinks.map((link)=>link.categoryUuid) : [existing.categoryUuid]), attributeValueIds ?? existing.attributeValues.map((link)=>link.valueUuid));
+    }
     const data = {};
 
     if (body.name !== undefined) {
@@ -95,7 +101,8 @@ const updateProduct = async (request, params) => {
     const finalSalePrice = salePrice !== undefined ? salePrice : existing.salePrice === null ? null : Number(existing.salePrice);
     if (finalSalePrice !== null && finalSalePrice > finalPrice) return errorResponse("Sale price cannot be greater than price", 422);
 
-    if (body.category_uuid !== undefined) {
+    if (categoryIds !== null) data.categoryUuid = categoryIds[0];
+    if (body.category_uuid !== undefined && categoryIds === null) {
       const categoryUuid = String(body.category_uuid || "").trim();
       if (!isUuid(categoryUuid)) return errorResponse("Category is required", 422);
       const category = await prisma.category.findUnique({ where: { uuid: categoryUuid } });
@@ -139,6 +146,14 @@ const updateProduct = async (request, params) => {
       }
 
       await tx.product.update({ where: { uuid: existing.uuid }, data });
+      if (categoryIds !== null) {
+        await tx.productCategory.deleteMany({where:{productUuid:existing.uuid}});
+        await tx.productCategory.createMany({data:categoryIds.map((id)=>({productUuid:existing.uuid,categoryUuid:id}))});
+      }
+      if (attributeValueIds !== null) {
+        await tx.productAttributeValue.deleteMany({where:{productUuid:existing.uuid}});
+        if (attributeValueIds.length) await tx.productAttributeValue.createMany({data:attributeValueIds.map((id)=>({productUuid:existing.uuid,valueUuid:id}))});
+      }
     });
 
     const product = await findProduct(existing.uuid);
@@ -148,6 +163,7 @@ const updateProduct = async (request, params) => {
   } catch (error) {
     console.error("PUT/PATCH /api/product/:id failed:", error);
     if (newImageUrls.length) await deleteProductImages(newImageUrls);
+    if (/category selection|attribute value selection/i.test(error?.message || "")) return errorResponse(error.message, 422);
     if (error?.message?.toLowerCase().includes("image") || /price/i.test(error?.message || "")) return errorResponse(error.message, 422);
     return errorResponse("Failed to update product", 500);
   }

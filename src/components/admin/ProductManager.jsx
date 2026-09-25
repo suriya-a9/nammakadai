@@ -1,8 +1,30 @@
 "use client";
 
+import ListPagination, { PAGE_SIZE } from "@/components/admin/ListPagination";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { RiCloseLine, RiDeleteBinLine, RiEdit2Line, RiImageAddLine, RiImageLine, RiRefreshLine } from "react-icons/ri";
+
+function MultiDropdown({title, placeholder, selected, groups, onToggle, onClear, required = false}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const count = selected.length;
+  return <div className="nk-multi-field">
+    <div className="nk-multi-label">{title}{required && <span className="text-danger"> *</span>}</div>
+    <button type="button" className={`nk-multi-trigger ${open ? "is-open" : ""}`} onClick={() => setOpen(!open)} aria-expanded={open}>
+      <span>{count ? `${count} selected` : placeholder}</span><span aria-hidden="true">{open ? "▴" : "▾"}</span>
+    </button>
+    {count > 0 && <div className="nk-multi-selection">{groups.flatMap(g => g.options).filter(o => selected.includes(o.id)).map(o => <button type="button" key={o.id} className="nk-multi-chip" onClick={() => onToggle(o.id)}>{o.label} <span>×</span></button>)}</div>}
+    {open && <div className="nk-multi-menu">
+      <div className="nk-multi-tools"><input className="form-control" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search options..." /><button type="button" onClick={onClear} disabled={!count}>Clear</button></div>
+      <div className="nk-multi-options">{groups.map(group => {
+        const options=group.options.filter(o=>`${group.name} ${o.label}`.toLowerCase().includes(search.toLowerCase()));
+        return options.length ? <div key={group.name} className="nk-multi-group"><div className="nk-multi-group-name">{group.name}</div>{options.map(o=><label key={o.id} className="nk-multi-option"><input type="checkbox" checked={selected.includes(o.id)} onChange={()=>onToggle(o.id)}/><span>{o.label}</span></label>)}</div> : null;
+      })}</div>
+      <button type="button" className="nk-multi-done" onClick={()=>setOpen(false)}>Done</button>
+    </div>}
+  </div>;
+}
 
 const MAX_PRODUCT_IMAGES = 8;
 
@@ -10,6 +32,8 @@ const EMPTY_FORM = {
   uuid: null,
   name: "",
   category_uuid: "",
+  category_uuids: [],
+  attribute_value_uuids: [],
   price: "",
   sale_price: "",
   quantity: "0",
@@ -36,9 +60,11 @@ const isActive = (value) => Number(value) === 1 || value === true;
 export default function ProductManager() {
   const searchParams = useSearchParams();
   const categoryFromUrl = searchParams.get("category") || "";
+  const [page, setPage] = useState(1);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [form, setForm] = useState({ ...EMPTY_FORM, category_uuid: categoryFromUrl });
+  const [attributes, setAttributes] = useState([]);
+  const [form, setForm] = useState({ ...EMPTY_FORM, category_uuid: categoryFromUrl, category_uuids: categoryFromUrl ? [categoryFromUrl] : [] });
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -56,6 +82,11 @@ export default function ProductManager() {
     if (!response.ok) throw new Error(result.message || "Failed to load categories");
     setCategories(result.data || []);
   }, []);
+
+  const loadAttributes = useCallback(async () => {
+    const response=await fetch("/api/admin/attributes",{cache:"no-store"});
+    if(response.ok) setAttributes((await response.json()).data||[]);
+  },[]);
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -75,12 +106,12 @@ export default function ProductManager() {
   }, [categoryFromUrl]);
 
   useEffect(() => {
-    Promise.all([loadCategories(), loadProducts()]).catch((err) => setError(err.message));
-  }, [loadCategories, loadProducts]);
+    Promise.all([loadCategories(), loadProducts(), loadAttributes()]).catch((err) => setError(err.message));
+  }, [loadCategories, loadProducts, loadAttributes]);
 
   useEffect(() => {
     if (!form.uuid && categoryFromUrl) {
-      setForm((value) => ({ ...value, category_uuid: categoryFromUrl }));
+      setForm((value) => ({ ...value, category_uuid: categoryFromUrl, category_uuids: [categoryFromUrl] }));
     }
   }, [categoryFromUrl, form.uuid]);
 
@@ -92,8 +123,12 @@ export default function ProductManager() {
     );
   }, [products, search]);
 
+  useEffect(() => { setPage(1); }, [search, categoryFromUrl]);
+  const currentPage = Math.min(page, Math.max(1, Math.ceil(visibleProducts.length / PAGE_SIZE)));
+  const pagedProducts = visibleProducts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   const resetForm = () => {
-    setForm({ ...EMPTY_FORM, category_uuid: categoryFromUrl });
+    setForm({ ...EMPTY_FORM, category_uuid: categoryFromUrl, category_uuids: categoryFromUrl ? [categoryFromUrl] : [] });
     setFileInputKey((value) => value + 1);
   };
 
@@ -108,6 +143,8 @@ export default function ProductManager() {
       uuid: product.uuid || product.id,
       name: product.name || "",
       category_uuid: product.category_uuid || product.categories?.[0]?.uuid || product.categories?.[0]?.id || "",
+      category_uuids:(product.categories||[]).map((category)=>category.uuid||category.id),
+      attribute_value_uuids:(product.attributes||[]).flatMap((attribute)=>attribute.values.map((value)=>value.uuid)),
       price: product.price ?? "",
       sale_price: product.sale_price !== product.price ? product.sale_price ?? "" : "",
       quantity: product.quantity ?? 0,
@@ -174,10 +211,15 @@ export default function ProductManager() {
     setMessage("");
     setError("");
     try {
+      if (!form.category_uuids.length) throw new Error("Select at least one category");
       const editing = Boolean(form.uuid);
       const payload = new FormData();
       payload.append("name", form.name);
-      payload.append("category_uuid", form.category_uuid);
+      payload.append("category_uuid", form.category_uuids[0] || "");
+      form.category_uuids.forEach((id)=>payload.append("category_uuids",id));
+      // Explicit empty arrays require a marker to clear all attributes when editing.
+      payload.append("attribute_selection_present","1");
+      form.attribute_value_uuids.forEach((id)=>payload.append("attribute_value_uuids",id));
       payload.append("price", form.price);
       payload.append("sale_price", form.sale_price);
       payload.append("quantity", form.quantity);
@@ -253,12 +295,12 @@ export default function ProductManager() {
                   <table className="table all-package theme-table product-table align-middle">
                     <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Action</th></tr></thead>
                     <tbody>
-                      {visibleProducts.map((product) => {
+                      {pagedProducts.map((product) => {
                         const imageUrl = product.product_thumbnail?.original_url || "/assets/images/placeholder/product.png";
                         return (
                           <tr key={product.uuid || product.id}>
                             <td><div className="admin-product-cell"><img src={imageUrl} alt={product.name} /><span>{product.name}</span></div></td>
-                            <td>{product.categories?.[0]?.name || "-"}</td>
+                            <td>{product.categories?.map((item)=>item.name).join(", ") || "-"}</td>
                             <td>₹{Number(product.sale_price ?? product.price ?? 0).toFixed(2)}</td>
                             <td><span className={Number(product.quantity) < 10 ? "admin-stock-low" : ""}>{product.quantity ?? 0}</span>{Number(product.quantity) < 10 ? <small className="admin-stock-warning">Low stock</small> : null}</td>
                             <td><span className={`badge ${isActive(product.status) ? "badge-success" : "badge-danger"}`}>{isActive(product.status) ? "Active" : "Inactive"}</span></td>
@@ -273,6 +315,7 @@ export default function ProductManager() {
                       })}
                     </tbody>
                   </table>
+                  <ListPagination page={currentPage} onPageChange={setPage} total={visibleProducts.length} />
                 </div>
               ) : (
                 <div className="admin-empty-category"><RiImageLine /><div>No products found</div></div>
@@ -295,13 +338,21 @@ export default function ProductManager() {
                 </div>
 
                 <div className="mb-4">
-                  <label className="form-label-title">Category / Subcategory <span className="text-danger">*</span></label>
-                  <select className="form-select" value={form.category_uuid} onChange={(e) => setForm((v) => ({ ...v, category_uuid: e.target.value }))} required>
-                    <option value="">Select Category</option>
-                    {categoryOptions.map((category) => <option key={category.uuid} value={category.uuid}>{category.parent ? `${category.parent} > ${category.name}` : category.name}</option>)}
-                  </select>
+                  <MultiDropdown title="Categories" required placeholder="Choose categories and subcategories"
+                    selected={form.category_uuids}
+                    groups={[{name:"Main categories",options:categoryOptions.filter(c=>!c.parent).map(c=>({id:c.uuid,label:c.name}))},...categoryOptions.filter(c=>c.parent).reduce((groups,c)=>{let group=groups.find(g=>g.name===c.parent);if(!group){group={name:c.parent+" — Subcategories",options:[]};groups.push(group)}group.options.push({id:c.uuid,label:c.name});return groups},[])]}
+                    onToggle={id=>setForm(v=>({...v,category_uuids:v.category_uuids.includes(id)?v.category_uuids.filter(x=>x!==id):[...v.category_uuids,id]}))}
+                    onClear={()=>setForm(v=>({...v,category_uuids:[]}))}/>
+                  <small className="text-muted d-block mt-2">Select one or more. The first selection is the primary category.</small>
                 </div>
-
+                <div className="mb-4">
+                  <MultiDropdown title="Product attributes (optional)" placeholder="Choose attributes and their values"
+                    selected={form.attribute_value_uuids}
+                    groups={attributes.map(a=>({name:a.name,options:a.values.map(v=>({id:v.uuid,label:v.value}))}))}
+                    onToggle={id=>setForm(v=>({...v,attribute_value_uuids:v.attribute_value_uuids.includes(id)?v.attribute_value_uuids.filter(x=>x!==id):[...v.attribute_value_uuids,id]}))}
+                    onClear={()=>setForm(v=>({...v,attribute_value_uuids:[]}))}/>
+                  {!attributes.length && <a href="/admin/attributes">Create attributes first</a>}
+                </div>
                 <div className="row">
                   <div className="col-md-6 mb-4"><label className="form-label-title">Price <span className="text-danger">*</span></label><input type="number" min="0" step="0.01" className="form-control" value={form.price} onChange={(e) => setForm((v) => ({ ...v, price: e.target.value }))} required /></div>
                   <div className="col-md-6 mb-4"><label className="form-label-title">Sale Price</label><input type="number" min="0" step="0.01" className="form-control" value={form.sale_price} onChange={(e) => setForm((v) => ({ ...v, sale_price: e.target.value }))} /></div>

@@ -29,7 +29,7 @@ export default function AdminThemeShell({ admin, children }) {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [productsOpen, setProductsOpen] = useState(pathname.startsWith("/admin/category") || pathname.startsWith("/admin/product"));
+  const [productsOpen, setProductsOpen] = useState(pathname.startsWith("/admin/category") || pathname.startsWith("/admin/product") || pathname.startsWith("/admin/attributes"));
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -43,7 +43,7 @@ export default function AdminThemeShell({ admin, children }) {
 
   useEffect(() => {
     setMobileOpen(false);
-    if (pathname.startsWith("/admin/category") || pathname.startsWith("/admin/product")) setProductsOpen(true);
+    if (pathname.startsWith("/admin/category") || pathname.startsWith("/admin/product") || pathname.startsWith("/admin/attributes")) setProductsOpen(true);
   }, [pathname]);
 
   useEffect(() => {
@@ -128,7 +128,7 @@ export default function AdminThemeShell({ admin, children }) {
   const dashboardActive = pathname === "/admin";
   const categoryActive = pathname.startsWith("/admin/category");
   const productActive = pathname.startsWith("/admin/product");
-  const productsSectionActive = categoryActive || productActive;
+  const productsSectionActive = categoryActive || productActive || pathname.startsWith("/admin/attributes");
 
   return (
     <div className="page-wrapper compact-wrapper" id="pageWrapper">
@@ -252,6 +252,7 @@ export default function AdminThemeShell({ admin, children }) {
                     <div className="svg-icon"><RiUser3Line /></div><span>Customers</span>
                   </Link>
                 </li>
+                <li className="sidebar-list"><Link href="/admin/policies" className={`sidebar-link sidebar-title link-nav ${pathname.startsWith("/admin/policies") ? "active" : ""}`}><div className="svg-icon"><RiFolderLine /></div><span>Store Policies</span></Link></li>
                 <li className="sidebar-list">
                   <Link href="/admin/newsletter" className={`sidebar-link sidebar-title link-nav ${pathname.startsWith("/admin/newsletter") ? "active" : ""}`}>
                     <div className="svg-icon"><span style={{fontSize: 18}}>✉</span></div><span>Newsletter</span>
@@ -278,6 +279,11 @@ export default function AdminThemeShell({ admin, children }) {
                       <Link href="/admin/category" className={categoryActive ? "active" : ""}>
                         <div className="svg-icon"><RiFolderLine /></div>
                         <span>Categories</span>
+                      </Link>
+                    </li>
+                    <li className="sidebar-list">
+                      <Link href="/admin/attributes" className={pathname.startsWith("/admin/attributes") ? "active" : ""}>
+                        <div className="svg-icon"><RiStore3Line /></div><span>Attributes</span>
                       </Link>
                     </li>
                   </ul>

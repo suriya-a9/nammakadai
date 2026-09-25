@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import prisma from "@/lib/prisma";
+import { parseIds, validateAssignments } from "@/lib/productAssignments";
 import { requireAdminRequest } from "@/lib/adminAuth";
 import { deleteProductImages, MAX_PRODUCT_IMAGES, readProductRequest, saveProductImages } from "@/lib/productImage";
 import { isUuid, makeProductSlug, parseProductStatus, serializeProduct } from "@/lib/product";
@@ -53,7 +54,7 @@ export async function GET(request) {
       if (!categoryIds.length) {
         return NextResponse.json({ current_page: page, last_page: 1, total: 0, per_page: perPage, data: [] });
       }
-      where.categoryUuid = { in: categoryIds };
+      where.OR = [{categoryUuid:{in:categoryIds}},{categoryLinks:{some:{categoryUuid:{in:categoryIds}}}}];
     }
 
     if (priceParam) {
@@ -96,7 +97,7 @@ export async function GET(request) {
     const [rows, total] = await Promise.all([
       prisma.product.findMany({
         where,
-        include: { category: true, images: { orderBy: { sortOrder: "asc" } }, reviews: { include: { customer: { select: { uuid: true, name: true } } }, orderBy: { createdAt: "desc" } } },
+        include: { category: true, categoryLinks: {include:{category:true}}, attributeValues:{include:{value:{include:{attribute:true}}}}, images: { orderBy: { sortOrder: "asc" } }, reviews: { include: { customer: { select: { uuid: true, name: true } } }, orderBy: { createdAt: "desc" } } },
         orderBy,
         skip: (page - 1) * perPage,
         take: perPage,
@@ -125,7 +126,10 @@ export async function POST(request) {
 
     const body = await readProductRequest(request);
     const name = typeof body.name === "string" ? body.name.trim() : "";
-    const categoryUuid = typeof body.category_uuid === "string" ? body.category_uuid.trim() : "";
+    const categoryIds = parseIds(body.category_uuids?.length ? body.category_uuids : [body.category_uuid]);
+    const attributeValueIds = parseIds(body.attribute_value_uuids);
+    await validateAssignments(prisma, categoryIds, attributeValueIds);
+    const categoryUuid = categoryIds[0];
     const status = parseProductStatus(body.status);
     const price = parseMoney(body.price, "Price", { required: true });
     const salePrice = parseMoney(body.sale_price, "Sale price");
@@ -154,6 +158,8 @@ export async function POST(request) {
         status: status === undefined ? true : status,
         imageUrl: uploadedImageUrls[0] || null,
         categoryUuid,
+        categoryLinks: {create:categoryIds.map((id)=>({categoryUuid:id}))},
+        ...(attributeValueIds.length ? {attributeValues:{create:attributeValueIds.map((id)=>({valueUuid:id}))}} : {}),
         ...(uploadedImageUrls.length
           ? {
               images: {
@@ -162,13 +168,14 @@ export async function POST(request) {
             }
           : {}),
       },
-      include: { category: true, images: { orderBy: { sortOrder: "asc" } }, reviews: { include: { customer: { select: { uuid: true, name: true } } }, orderBy: { createdAt: "desc" } } },
+      include: { category: true, categoryLinks: {include:{category:true}}, attributeValues:{include:{value:{include:{attribute:true}}}}, images: { orderBy: { sortOrder: "asc" } }, reviews: { include: { customer: { select: { uuid: true, name: true } } }, orderBy: { createdAt: "desc" } } },
     });
 
     return NextResponse.json({ message: "Product created successfully", data: serializeProduct(product) }, { status: 201 });
   } catch (error) {
     console.error("POST /api/product failed:", error);
     if (uploadedImageUrls.length) await deleteProductImages(uploadedImageUrls);
+    if (/category selection|attribute value selection/i.test(error?.message || "")) return errorResponse(error.message, 422);
     if (error?.message?.toLowerCase().includes("image") || /price/i.test(error?.message || "")) return errorResponse(error.message, 422);
     return errorResponse("Failed to create product", 500);
   }
