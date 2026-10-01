@@ -4,7 +4,6 @@ import Btn from "@/elements/buttons/Btn";
 import { useRouter } from "next/navigation";
 import React, { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { RiArrowLeftSLine, RiArrowRightSLine } from "react-icons/ri";
 import { Input, InputGroup } from "reactstrap";
 import ProductWholesale from "./ProductWholesale";
 
@@ -89,17 +88,18 @@ const ProductDetailAction = ({ productState, setProductState, extraOption, isDis
       {isDisplay && (
         <div>
           <div className="qty-section">
+            <label className="d-block fw-semibold mb-2" htmlFor="product-detail-quantity">Quantity</label>
             <div className="cart_qty qty-box product-qty">
               <InputGroup>
                 <span className="input-group-prepend">
                   <Btn className=" quantity-left-minus" id="quantity-left-minus18" type="submit" onClick={() => updateQty(-1)}>
-                    <RiArrowLeftSLine />
+                    <span aria-hidden="true">−</span>
                   </Btn>
                 </span>
-                <Input className="input-number" type="number" value={productState?.productQty} readOnly />
+                <Input id="product-detail-quantity" className="input-number" type="number" value={productState?.productQty} readOnly />
                 <span className="input-group-prepend">
                   <Btn type="submit" className=" quantity-left-plus" id="quantity-left-plus18" onClick={() => updateQty(1)}>
-                    <RiArrowRightSLine />
+                    <span aria-hidden="true">+</span>
                   </Btn>
                 </span>
               </InputGroup>

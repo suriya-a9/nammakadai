@@ -54,6 +54,7 @@ export const readCategoryRequest = async (request) => {
     return {
       name: formData.get("name"),
       status: formData.get("status"),
+      priority: formData.get("priority"),
       parent_uuid: formData.get("parent_uuid"),
       image: formData.get("image"),
       remove_image: formData.get("remove_image"),

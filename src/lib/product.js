@@ -25,6 +25,7 @@ const numberValue = (value) => {
 };
 
 export const serializeProduct = (product) => {
+  const displayName = product.designCode?.code ? `${product.name} - ${product.designCode.code}` : product.name;
   const price = numberValue(product.price) ?? 0;
   const salePrice = numberValue(product.salePrice) ?? price;
   const discount = price > 0 && salePrice < price ? Math.round(((price - salePrice) / price) * 100) : 0;
@@ -34,7 +35,7 @@ export const serializeProduct = (product) => {
       id: image.uuid || `${product.uuid}-${index}`,
       uuid: image.uuid || null,
       original_url: image.imageUrl,
-      name: product.name,
+      name: displayName,
       sort_order: image.sortOrder ?? index,
       mime_type: null,
     }))
@@ -46,7 +47,7 @@ export const serializeProduct = (product) => {
       id: product.uuid,
       uuid: null,
       original_url: fallbackImageUrl,
-      name: product.name,
+      name: displayName,
       sort_order: 0,
       mime_type: null,
     });
@@ -93,7 +94,10 @@ export const serializeProduct = (product) => {
   return {
     id: product.uuid,
     uuid: product.uuid,
-    name: product.name,
+    name: displayName,
+    base_name: product.name,
+    design_code_uuid: product.designCodeUuid || "",
+    design_code: product.designCode?.code || "",
     slug: product.slug,
     short_description: product.description || "",
     description: product.description || "",
@@ -142,6 +146,13 @@ export const serializeProduct = (product) => {
     category_uuid: product.categoryUuid,
     categories,
     attributes: Object.values(productAttributes),
+    variant_options: (product.variantOptions || []).map(option => ({
+      uuid: option.uuid, selection_key: option.selectionKey,
+      selected_attributes: option.selectedAttributes,
+      price: Number(option.priceGroup.price),
+      sale_price: option.priceGroup.salePrice == null ? null : Number(option.priceGroup.salePrice),
+      price_group: option.priceGroup.label,
+    })),
     product_thumbnail: thumbnail,
     product_galleries: gallery,
   };

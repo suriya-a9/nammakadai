@@ -69,6 +69,7 @@ export const readProductRequest = async (request) => {
 
     return {
       name: formData.get("name"),
+      design_code_uuid: formData.get("design_code_uuid"),
       description: formData.get("description"),
       price: formData.get("price"),
       sale_price: formData.get("sale_price"),

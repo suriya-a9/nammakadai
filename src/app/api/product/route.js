@@ -97,7 +97,7 @@ export async function GET(request) {
     const [rows, total] = await Promise.all([
       prisma.product.findMany({
         where,
-        include: { category: true, categoryLinks: {include:{category:true}}, attributeValues:{include:{value:{include:{attribute:true}}}}, images: { orderBy: { sortOrder: "asc" } }, reviews: { include: { customer: { select: { uuid: true, name: true } } }, orderBy: { createdAt: "desc" } } },
+        include: { designCode: true, category: true, categoryLinks: {include:{category:true}}, attributeValues:{include:{value:{include:{attribute:true}}}},variantOptions:{include:{priceGroup:true}}, images: { orderBy: { sortOrder: "asc" } }, reviews: { include: { customer: { select: { uuid: true, name: true } } }, orderBy: { createdAt: "desc" } } },
         orderBy,
         skip: (page - 1) * perPage,
         take: perPage,
@@ -133,6 +133,8 @@ export async function POST(request) {
     const status = parseProductStatus(body.status);
     const price = parseMoney(body.price, "Price", { required: true });
     const salePrice = parseMoney(body.sale_price, "Sale price");
+    const designCodeUuid = body.design_code_uuid || null;
+    if (designCodeUuid && !await prisma.designCode.findUnique({where:{uuid:designCodeUuid}})) return errorResponse("Invalid design code",422);
     const quantity = Math.max(Number.parseInt(body.quantity, 10) || 0, 0);
 
     if (!name) return errorResponse("Product name is required", 422);
@@ -150,6 +152,7 @@ export async function POST(request) {
       data: {
         uuid,
         name,
+        designCodeUuid,
         slug: makeProductSlug(name, uuid),
         description: typeof body.description === "string" ? body.description.trim() || null : null,
         price,
@@ -168,7 +171,7 @@ export async function POST(request) {
             }
           : {}),
       },
-      include: { category: true, categoryLinks: {include:{category:true}}, attributeValues:{include:{value:{include:{attribute:true}}}}, images: { orderBy: { sortOrder: "asc" } }, reviews: { include: { customer: { select: { uuid: true, name: true } } }, orderBy: { createdAt: "desc" } } },
+      include: { designCode: true, category: true, categoryLinks: {include:{category:true}}, attributeValues:{include:{value:{include:{attribute:true}}}},variantOptions:{include:{priceGroup:true}}, images: { orderBy: { sortOrder: "asc" } }, reviews: { include: { customer: { select: { uuid: true, name: true } } }, orderBy: { createdAt: "desc" } } },
     });
 
     return NextResponse.json({ message: "Product created successfully", data: serializeProduct(product) }, { status: 201 });

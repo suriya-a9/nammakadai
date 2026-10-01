@@ -19,7 +19,7 @@ const SidebarProduct = ({ values, quote }) => {
         <ul className="qty">
           {cartProducts?.map((item, i) => {
             const verified = quote?.items?.find(row => row.product_id === item.product_id && (row.selected_attributes||[]).map(a=>a.value_uuid).sort().join(":")===(item.selected_attributes||[]).map(a=>a.value_uuid).sort().join(":"));
-            const actualPrice = verified ? verified.unit_price : Number(item?.variation?.sale_price ?? item?.product?.sale_price ?? 0);
+            const actualPrice = verified ? verified.unit_price : Number(item?.unit_price ?? item?.variation?.sale_price ?? item?.product?.sale_price ?? 0);
             return <li key={i}>
               {item && (
                 <div className="cart-image">

@@ -17,6 +17,7 @@ import {
   RiLogoutBoxLine,
   RiNotification3Line,
   RiSearchLine,
+  RiStarLine,
   RiStore3Line,
   RiSubtractLine,
 } from "react-icons/ri";
@@ -252,6 +253,11 @@ export default function AdminThemeShell({ admin, children }) {
                     <div className="svg-icon"><RiUser3Line /></div><span>Customers</span>
                   </Link>
                 </li>
+                <li className="sidebar-list">
+                  <Link href="/admin/reviews" className={`sidebar-link sidebar-title link-nav ${pathname.startsWith("/admin/reviews") ? "active" : ""}`}>
+                    <div className="svg-icon"><RiStarLine /></div><span>Reviews</span>
+                  </Link>
+                </li>
                 <li className="sidebar-list"><Link href="/admin/policies" className={`sidebar-link sidebar-title link-nav ${pathname.startsWith("/admin/policies") ? "active" : ""}`}><div className="svg-icon"><RiFolderLine /></div><span>Store Policies</span></Link></li>
                 <li className="sidebar-list">
                   <Link href="/admin/newsletter" className={`sidebar-link sidebar-title link-nav ${pathname.startsWith("/admin/newsletter") ? "active" : ""}`}>
@@ -281,6 +287,7 @@ export default function AdminThemeShell({ admin, children }) {
                         <span>Categories</span>
                       </Link>
                     </li>
+                    <li className="sidebar-list"><Link href="/admin/design-codes" className={pathname.startsWith("/admin/design-codes") ? "active" : ""}><div className="svg-icon"><RiStore3Line /></div><span>Design Codes</span></Link></li>
                     <li className="sidebar-list">
                       <Link href="/admin/attributes" className={pathname.startsWith("/admin/attributes") ? "active" : ""}>
                         <div className="svg-icon"><RiStore3Line /></div><span>Attributes</span>

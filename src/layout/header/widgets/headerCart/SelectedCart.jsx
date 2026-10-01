@@ -56,7 +56,7 @@ const SelectedCart = ({ modal, setSelectedVariation, setModal }) => {
                     {(elem.selected_attributes||[]).map(a=><small key={a.attribute_uuid} style={{display:"block"}}>{a.name}: {a.value}</small>)}
                   </Link>
                   <h4 className="quantity">
-                    <span>{convertCurrency(elem?.variation?.sale_price ?? elem?.product?.sale_price)}</span>
+                    <span>{convertCurrency(elem?.unit_price ?? elem?.variation?.sale_price ?? elem?.product?.sale_price)}</span>
                   </h4>
                   {elem?.variation && <h5 className="gram">{elem?.variation?.attribute_values?.[0]?.value ? elem?.variation?.attribute_values?.[0]?.value : elem?.selected_variation}</h5>}
                   <HandleQuantity productObj={elem?.product} elem={elem} customIcon={<RiDeleteBinLine />} />

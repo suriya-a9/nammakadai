@@ -9,6 +9,7 @@ const EMPTY_FORM = {
   uuid: null,
   name: "",
   status: true,
+  priority: 0,
   parent_uuid: "",
   image_url: "",
   imageFile: null,
@@ -88,6 +89,7 @@ export default function CategoryManager() {
       uuid: category.uuid || category.id,
       name: category.name || "",
       status: isActive(category),
+      priority: category.priority ?? 0,
       parent_uuid: category.parent_uuid || category.parent_id || "",
       image_url: imageUrl,
       imageFile: null,
@@ -152,6 +154,7 @@ export default function CategoryManager() {
       const payload = new FormData();
       payload.append("name", form.name);
       payload.append("status", form.status ? "1" : "0");
+      payload.append("priority", String(form.parent_uuid ? 0 : form.priority));
       payload.append("parent_uuid", form.parent_uuid || "");
       if (form.imageFile) payload.append("image", form.imageFile);
       if (form.removeImage) payload.append("remove_image", "1");
@@ -227,12 +230,12 @@ export default function CategoryManager() {
           <div className="mb-3"><input className="form-control" placeholder="Search categories" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
           {loading ? <div className="admin-content-loading">Loading categories...</div> : flatRows.length ? (
             <div className="table-responsive"><table className="table all-package theme-table align-middle admin-list-table">
-              <thead><tr><th>Category</th><th>Type</th><th>Parent</th><th>Status</th><th>Action</th></tr></thead>
+              <thead><tr><th>Category</th><th>Type</th><th>Parent</th><th>Priority</th><th>Status</th><th>Action</th></tr></thead>
               <tbody>{pagedRows.map((category) => { const uuid=category.uuid||category.id; const active=isActive(category); const imageUrl=category.image_url||category.category_image?.original_url; return (
                 <tr key={uuid}>
                   <td><div className="admin-product-cell">{imageUrl?<img src={imageUrl} alt={category.name}/>:<span className="admin-category-thumb admin-category-thumb-empty"><RiImageLine/></span>}<button type="button" className="admin-category-product-link fw-medium" onClick={()=>router.push(`/admin/product?category=${uuid}`)}>{category.name}</button></div></td>
                   <td>{category.isChild ? <span className="badge bg-light text-dark">Subcategory</span> : <span className="badge bg-light text-dark">Main</span>}</td>
-                  <td>{category.parentName}</td><td><span className={`badge ${active?"badge-success":"badge-danger"}`}>{active?"Active":"Inactive"}</span></td>
+                  <td>{category.parentName}</td><td>{category.isChild ? "—" : category.priority ?? 0}</td><td><span className={`badge ${active?"badge-success":"badge-danger"}`}>{active?"Active":"Inactive"}</span></td>
                   <td><div className="admin-product-actions">{!category.isChild&&<button title="Add subcategory" onClick={()=>addSubcategory(category)}><RiAddLine/></button>}<button title="Edit" onClick={()=>editCategory(category)}><RiEdit2Line/></button><button className="delete" title="Delete" onClick={()=>removeCategory(category)}><RiDeleteBinLine/></button></div></td>
                 </tr>);})}</tbody>
             </table><ListPagination page={currentPage} onPageChange={setPage} total={flatRows.length} /></div>
@@ -247,6 +250,7 @@ export default function CategoryManager() {
           <form className="theme-form theme-form-2 mega-form" onSubmit={save}>
             <div className="mb-4"><label className="form-label-title">Name <span className="text-danger">*</span></label><input className="form-control" value={form.name} onChange={(e)=>setForm(v=>({...v,name:e.target.value}))} required /></div>
             <div className="mb-4"><label className="form-label-title">Parent Category</label><select className="form-select" value={form.parent_uuid} disabled={hasChildren} onChange={(e)=>setForm(v=>({...v,parent_uuid:e.target.value}))}><option value="">None - Main Category</option>{categories.filter(c=>(c.uuid||c.id)!==form.uuid).map(c=><option key={c.uuid||c.id} value={c.uuid||c.id}>{c.name}</option>)}</select>{hasChildren&&<p className="help-text mt-2">A category with subcategories must remain a main category.</p>}</div>
+            {!form.parent_uuid && <div className="mb-4"><label className="form-label-title">Priority (higher number appears first)</label><input className="form-control" type="number" min="0" step="1" value={form.priority} onChange={(e)=>setForm(v=>({...v,priority:e.target.value}))} required /></div>}
             <div className="mb-4"><label className="form-label-title">Image</label><input key={fileInputKey} className="form-control" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={onImageChange}/>{form.imagePreview?<div className="admin-category-image-preview"><img src={form.imagePreview} alt="Category preview"/><button type="button" className="btn btn-sm btn-outline-danger" onClick={removeSelectedImage}>Remove</button></div>:<div className="admin-category-image-empty"><RiImageLine/><span>No image selected</span></div>}</div>
             <div className="mb-4 admin-status-line"><label className="form-label-title mb-0">Status</label><label className="switch"><input type="checkbox" checked={form.status} onChange={(e)=>setForm(v=>({...v,status:e.target.checked}))}/><span className="switch-state"/></label><span>{form.status?"Active":"Inactive"}</span></div>
             <div className="admin-form-buttons"><button type="button" className="btn btn-light" onClick={()=>setFormOpen(false)}>Cancel</button><button className="btn btn-primary" disabled={saving}>{saving?"Saving...":form.uuid?"Update Category":"Save Category"}</button></div>

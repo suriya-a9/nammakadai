@@ -67,6 +67,8 @@ export async function POST(request) {
     const name = typeof body.name === "string" ? body.name.trim() : "";
     const status = parseStatus(body.status);
     const parentUuid = normalizeParentUuid(body.parent_uuid ?? body.parent_id);
+    const priority = Number(body.priority ?? 0);
+    if (!Number.isSafeInteger(priority) || priority < 0) return errorResponse("Priority must be a non-negative whole number", 422);
 
     if (!name) {
       return errorResponse("Category name is required", 422, {
@@ -90,6 +92,7 @@ export async function POST(request) {
       data: {
         name,
         status: status === undefined ? true : status,
+        priority: parentUuid ? 0 : priority,
         imageUrl: uploadedImageUrl,
         parentUuid: parentUuid || null,
       },

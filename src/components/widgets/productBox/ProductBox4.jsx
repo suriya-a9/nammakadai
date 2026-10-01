@@ -12,7 +12,7 @@ const ProductBox4 = ({ productState }) => {
   const { convertCurrency } = useContext(SettingContext);
   return (
     <>
-      <div className={`basic-product theme-product-3 ${productState?.product?.stock_status === "out_of_stock" ? "sold-out" : ""}`}>
+      <div className={`basic-product theme-product-3`}>
         <div className="img-wrapper">
           {productState?.product?.discount && <div className="ribbon-round">{productState?.product?.discount}%</div>}
           <Link href={`/product/${productState?.product?.slug}`}>

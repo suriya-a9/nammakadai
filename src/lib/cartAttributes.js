@@ -22,5 +22,11 @@ export async function validateSelection(db, productUuid, raw) {
     if (selected.length !== 1) throw new Error("Invalid attribute selection for this product");
     result.push({attribute_uuid:attributeUuid, name:links.find(l=>l.value.attributeUuid===attributeUuid).value.attribute.name, value_uuid:selected[0].uuid, value:selected[0].value});
   }
-  return result.sort((a,b)=>a.attribute_uuid.localeCompare(b.attribute_uuid));
+  const canonical = result.sort((a,b)=>a.attribute_uuid.localeCompare(b.attribute_uuid));
+  const variantCount = await db.productVariantOption.count({where:{productUuid}});
+  if (variantCount) {
+    const allowed = await db.productVariantOption.findUnique({where:{productUuid_selectionKey:{productUuid,selectionKey:keyFor(canonical)}}});
+    if (!allowed) throw new Error("This measurement combination is unavailable. Please choose a valid combination.");
+  }
+  return canonical;
 }

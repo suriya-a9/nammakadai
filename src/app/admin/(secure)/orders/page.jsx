@@ -39,6 +39,16 @@ export default function AdminOrdersPage() {
     }catch(e){setError(e.message);}finally{setSaving("");}
   };
 
+  const changePaymentStatus=async(uuid,payment_status)=>{
+    setSaving(uuid);setError("");
+    try{
+      const response=await fetch("/api/admin/orders",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({uuid,payment_status})});
+      const result=await response.json();if(!response.ok)throw new Error(result.message||"Unable to update payment status");
+      setOrders(rows=>rows.map(order=>order.uuid===uuid?{...order,payment_status}:order));
+      setSelected(order=>order?.uuid===uuid?{...order,payment_status}:order);
+    }catch(error){setError(error.message);}finally{setSaving("");}
+  };
+
   const visible=useMemo(()=>{const q=search.trim().toLowerCase();const now=new Date();return orders.filter(o=>{if(q&&![o.number,o.name,o.email,o.phone,o.status].some(v=>String(v||"").toLowerCase().includes(q)))return false;if(statusFilter!=="all"&&o.status!==statusFilter)return false;const d=new Date(o.date);if(dateFilter==="today"){const a=new Date();a.setHours(0,0,0,0);if(d<a)return false}else if(dateFilter==="week"){const a=new Date();a.setDate(a.getDate()-7);if(d<a)return false}else if(dateFilter==="month"){const a=new Date(now.getFullYear(),now.getMonth(),1);if(d<a)return false}else if(dateFilter==="custom"){if(customFrom&&d<new Date(customFrom+"T00:00:00"))return false;if(customTo&&d>new Date(customTo+"T23:59:59"))return false}return true})},[orders,search,statusFilter,dateFilter,customFrom,customTo]);
 
   useEffect(()=>{setPage(1)},[search,statusFilter,dateFilter,customFrom,customTo]);
@@ -52,7 +62,7 @@ export default function AdminOrdersPage() {
       {loading?<div className="admin-content-loading">Loading orders…</div>:visible.length===0?<div className="admin-empty-category">No orders found.</div>:
       <div className="table-responsive"><table className="table all-package theme-table align-middle admin-list-table"><thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody>{pagedRows.map(order=><tr key={order.uuid}>
         <td><strong>{order.number}</strong></td><td>{order.name}<br/><small>{order.email}</small></td><td>{new Date(order.date).toLocaleString()}</td><td>₹{Number(order.total).toFixed(2)}</td>
-        <td><select className={`form-select admin-order-status status-${order.status}`} value={order.status} disabled={saving===order.uuid} onChange={e=>changeStatus(order.uuid,e.target.value)}>{STATUSES.map(s=><option value={s} key={s}>{label(s)}</option>)}</select><small className="d-block mt-1">Payment: {label(order.payment_status)}</small></td>
+        <td><select className={`form-select admin-order-status status-${order.status}`} value={order.status} disabled={saving===order.uuid} onChange={e=>changeStatus(order.uuid,e.target.value)}>{STATUSES.map(s=><option value={s} key={s}>{label(s)}</option>)}</select><small className="d-block mt-1">Payment: {order.payment_method==="razorpay"?"Razorpay":"Cash on Delivery"} — {label(order.payment_status)}</small></td>
         <td><button className="admin-table-icon-btn" type="button" title="View order" onClick={()=>setSelected(order)}><RiEyeLine/></button></td>
       </tr>)}</tbody></table><ListPagination page={currentPage} onPageChange={setPage} total={visible.length}/></div>}
     </div></div>
@@ -61,6 +71,7 @@ export default function AdminOrdersPage() {
       <div className="admin-offcanvas-header"><div><small>Order details</small><h5>{selected?.number||"Order"}</h5></div><button type="button" onClick={()=>setSelected(null)}><RiCloseLine/></button></div>
       {selected&&<div className="admin-offcanvas-body">
         <div className="admin-order-summary"><div><span>Customer</span><strong>{selected.name}</strong><small>{selected.email}</small><small>{selected.phone}</small></div><div><span>Amount</span><strong>₹{Number(selected.total).toFixed(2)}</strong></div></div>
+        <div className="mt-4"><label className="form-label fw-semibold">Payment Method</label><p>{selected.payment_method==="razorpay"?"Razorpay (Online)":"Cash on Delivery"}</p><label className="form-label fw-semibold">Payment Status</label>{selected.payment_method==="cod"?<select className="form-select" value={selected.payment_status} disabled={saving===selected.uuid||selected.status==="cancelled"} onChange={e=>changePaymentStatus(selected.uuid,e.target.value)}><option value="pending">Pending (Unpaid)</option><option value="paid">Paid (Collected)</option></select>:<p>{label(selected.payment_status)} (verified through Razorpay)</p>}</div>
         <div className="mt-4"><label className="form-label fw-semibold">Order Status</label><select className={`form-select admin-order-status status-${selected.status}`} value={selected.status} disabled={saving===selected.uuid} onChange={e=>changeStatus(selected.uuid,e.target.value)}>{STATUSES.map(s=><option value={s} key={s}>{label(s)}</option>)}</select></div>
         <h6 className="mt-4">Delivery Address</h6><p>{selected.address}, {selected.city}, {selected.state} - {selected.pincode}</p>
         <h6 className="mt-4">Items</h6><div className="admin-order-items">{selected.items.map((item,i)=><div key={i}><span>{item.quantity} × {item.name}</span><strong>₹{Number(item.price).toFixed(2)}</strong></div>)}</div>

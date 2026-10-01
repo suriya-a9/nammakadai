@@ -14,7 +14,7 @@ const ProductBox1 = ({ productState, setProductState }) => {
   const { t } = useTranslation("common");
 
   return (
-    <div className={`basic-product ${productState?.product?.stock_status === "out_of_stock" ? "sold-out" : ""}`}>
+    <div className={`basic-product`}>
       <div className="img-wrapper">
         <ImageVariant thumbnail={productState?.selectedVariation?.variation_image ? productState?.selectedVariation?.variation_image : productState?.product?.product_thumbnail} gallery_images={productState?.product?.product_galleries} product={productState?.product} width={750} height={750} />
 
@@ -29,7 +29,6 @@ const ProductBox1 = ({ productState, setProductState }) => {
         </div>
 
         <ul className="trending-label">
-          {productState?.product?.stock_status === "out_of_stock" ? <li className="out_of_stock">{t("SoldOut")}</li> : null}
           {productState?.product?.is_sale_enable ? <li>{t("Sale")}</li> : null}
           {productState?.product?.is_featured ? <li>{t("Featured")}</li> : null}
           {productState?.product?.is_trending ? <li>{t("Trending")}</li> : null}

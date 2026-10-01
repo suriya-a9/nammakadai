@@ -19,6 +19,7 @@ export const serializeCategory = (category) => {
     name: category.name,
     slug: category.uuid,
     status: category.status ? 1 : 0,
+    priority: category.priority ?? 0,
     type: "product",
     parent_id: category.parentUuid || null,
     parent_uuid: category.parentUuid || null,
@@ -51,7 +52,7 @@ export const buildCategoryTree = (rows = []) => {
   });
 
   const sortNodes = (items) => {
-    items.sort((a, b) => a.name.localeCompare(b.name));
+    items.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0) || a.name.localeCompare(b.name));
     items.forEach((item) => sortNodes(item.subcategories));
   };
 

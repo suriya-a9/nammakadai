@@ -30,7 +30,7 @@ const ProfileInformation = () => {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify(form),
+        body: JSON.stringify({ name: form.name, email: form.email }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Unable to update profile");
@@ -57,8 +57,8 @@ const ProfileInformation = () => {
             <form onSubmit={saveProfile} className="mt-3">
               <Row className="g-3">
                 <Col md={6}><label className="form-label">Full Name</label><input className="form-control" value={form.name} onChange={(e)=>setForm({...form,name:e.target.value})} required /></Col>
-                <Col md={6}><label className="form-label">Email</label><input type="email" className="form-control" value={form.email} onChange={(e)=>setForm({...form,email:e.target.value})} required /></Col>
-                <Col md={6}><label className="form-label">Phone</label><input className="form-control" value={form.phone} onChange={(e)=>setForm({...form,phone:e.target.value})} /></Col>
+                <Col md={6}><label className="form-label">Email</label><input type="email" className="form-control" value={form.email} onChange={(e)=>setForm({...form,email:e.target.value})} /></Col>
+                <Col md={6}><label className="form-label">Phone</label><input className="form-control" value={form.phone} readOnly title="Mobile number is your account identifier" /></Col>
               </Row>
               {error && <div className="alert alert-danger mt-3 mb-0">{error}</div>}
               <div className="d-flex gap-2 mt-3">

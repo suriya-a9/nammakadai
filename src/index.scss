@@ -2405,3 +2405,97 @@ nav.navbar.navbar-expand-sm.navbar-light.pe-0.header-category-nav {
 .nk-policy-tabs button.active { background: #a20a25; color: #fff; border-color: #a20a25; }
 .nk-policy-editor { min-height: 390px; line-height: 1.7; resize: vertical; }
 .nk-policy-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-top: 20px; }
+
+/* NammaKadai storefront motion system */
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 110px;
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+.nk-storefront-motion {
+    opacity: 0;
+    transition: opacity 220ms ease-out;
+}
+
+.nk-storefront-motion.nk-route-ready {
+    opacity: 1;
+}
+
+.nk-scroll-reveal {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+    transition:
+        opacity 560ms cubic-bezier(0.22, 1, 0.36, 1) var(--nk-reveal-delay, 0ms),
+        transform 560ms cubic-bezier(0.22, 1, 0.36, 1) var(--nk-reveal-delay, 0ms);
+    will-change: opacity, transform;
+}
+
+.nk-scroll-reveal.nk-in-view {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    will-change: auto;
+}
+
+/* Keep Bootstrap/Reactstrap overlays polished without changing their behavior. */
+.modal.fade .modal-dialog {
+    transform: translate3d(0, 14px, 0) scale(0.985);
+    transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.modal.show .modal-dialog {
+    transform: translate3d(0, 0, 0) scale(1);
+}
+
+.modal-backdrop.fade {
+    transition: opacity 220ms ease;
+}
+
+.offcanvas {
+    transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), visibility 320ms ease;
+}
+
+.dropdown-menu {
+    animation: nk-dropdown-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
+    transform-origin: top center;
+}
+
+@keyframes nk-dropdown-in {
+    from { opacity: 0; transform: translate3d(0, -5px, 0) scale(0.99); }
+    to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+button,
+a,
+.form-control,
+.form-select,
+.product-box,
+.product-box .img-wrapper img {
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    .nk-storefront-motion,
+    .nk-scroll-reveal {
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
+
+/* Mobile-specific hero image and clearly labelled product quantity controls. */
+@media (max-width: 767px) {
+  .nk-home-hero-carousel .nk-home-hero-slide img { aspect-ratio: auto; height: auto; }
+}
+.product-qty .quantity-left-minus span,
+.product-qty .quantity-left-plus span { font-size: 22px; line-height: 1; font-weight: 600; }

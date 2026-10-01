@@ -15,7 +15,7 @@ const ProductBox2 = ({ productState, setProductState }) => {
 
   const { convertCurrency } = useContext(SettingContext);
   return (
-    <div className={`basic-product theme-product-1 ${productState?.product?.stock_status === "out_of_stock" ? "sold-out" : ""}`}>
+    <div className={`basic-product theme-product-1`}>
       <div className="overflow-hidden">
         <div className="img-wrapper">
           {productState?.product?.is_trending || productState?.product?.is_sale_enable || productState?.product?.is_featured ? (

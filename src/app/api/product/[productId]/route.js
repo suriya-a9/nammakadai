@@ -14,7 +14,7 @@ const errorResponse = (message, status = 400) => NextResponse.json({ message }, 
 const findProduct = async (value) =>
   prisma.product.findFirst({
     where: isUuid(value) ? { OR: [{ uuid: value }, { slug: value }] } : { slug: value },
-    include: { category: true, categoryLinks: {include:{category:true}}, attributeValues:{include:{value:{include:{attribute:true}}}}, images: { orderBy: { sortOrder: "asc" } }, reviews: { include: { customer: { select: { uuid: true, name: true } } }, orderBy: { createdAt: "desc" } } },
+    include: { designCode: true, category: true, categoryLinks: {include:{category:true}}, attributeValues:{include:{value:{include:{attribute:true}}}},variantOptions:{include:{priceGroup:true}}, images: { orderBy: { sortOrder: "asc" } }, reviews: { include: { customer: { select: { uuid: true, name: true } } }, orderBy: { createdAt: "desc" } } },
   });
 
 const parseMoney = (value, field) => {
@@ -78,6 +78,11 @@ const updateProduct = async (request, params) => {
       await validateAssignments(prisma, categoryIds ?? (existing.categoryLinks.length ? existing.categoryLinks.map((link)=>link.categoryUuid) : [existing.categoryUuid]), attributeValueIds ?? existing.attributeValues.map((link)=>link.valueUuid));
     }
     const data = {};
+    if (body.design_code_uuid !== undefined) {
+      const designCodeUuid = body.design_code_uuid || null;
+      if (designCodeUuid && !await prisma.designCode.findUnique({where:{uuid:designCodeUuid}})) return errorResponse("Invalid design code",422);
+      data.designCodeUuid = designCodeUuid;
+    }
 
     if (body.name !== undefined) {
       const name = typeof body.name === "string" ? body.name.trim() : "";

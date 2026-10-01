@@ -12,6 +12,7 @@ import Footers from "./footer";
 import Headers from "./header";
 import MobileMenu from "./header/widgets/MobileMenu";
 import NewsLetterModal from "./newsLetterModal";
+import StorefrontMotion from "@/components/storefront/StorefrontMotion";
 
 const SubLayout = ({ children }) => {
   const isTabActive = TabFocusChecker();
@@ -90,7 +91,7 @@ const SubLayout = ({ children }) => {
     <>
       <Headers />
       {pathName?.split("/")[1].toLowerCase() != "product" && <MobileMenu />}
-      {children}
+      <StorefrontMotion>{children}</StorefrontMotion>
       <AuthModal />
       <Footers />
       <NextTopLoader showSpinner={false} />

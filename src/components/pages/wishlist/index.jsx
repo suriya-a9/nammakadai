@@ -1,9 +1,7 @@
 "use client";
 import NoDataFound from "@/components/widgets/NoDataFound";
 import WrapperComponent from "@/components/widgets/WrapperComponent";
-import CartContext from "@/context/cartContext";
 import SettingContext from "@/context/settingContext";
-import ThemeOptionContext from "@/context/themeOptionsContext";
 import WishlistContext from "@/context/wishlistContext";
 import Loader from "@/layout/loader";
 import Breadcrumbs from "@/utils/commonComponents/breadcrumb";
@@ -11,24 +9,17 @@ import { Href } from "@/utils/constants";
 import Link from "next/link";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
-import { RiCloseLine, RiShoppingCartLine } from "react-icons/ri";
+import { RiCloseLine } from "react-icons/ri";
 import { Table } from "reactstrap";
 import emptyImage from "../../../../public/assets/svg/empty-items.svg";
 
 const WishlistContent = ({ embedded = false }) => {
   const { wishlistProducts, WishlistAPILoading, removeWishlist } = useContext(WishlistContext);
   const { t } = useTranslation("common");
-  const { setCartCanvas } = useContext(ThemeOptionContext);
-  const { handleIncDec, openCartSidebar } = useContext(CartContext);
   const removeFromWishlist = (product) => {
     void removeWishlist(product?.uuid || product?.id);
   };
   const { convertCurrency } = useContext(SettingContext);
-
-  const addToCart = (product) => {
-    setCartCanvas(true);
-    handleIncDec(1, product);
-  };
 
   if (WishlistAPILoading) return <Loader />;
 
@@ -72,9 +63,6 @@ const WishlistContent = ({ embedded = false }) => {
                             <a href={Href} className="icon " onClick={() => removeFromWishlist(product)}>
                               <RiCloseLine />
                             </a>
-                            <a href={Href} className="cart" onClick={() => addToCart(product)}>
-                              <RiShoppingCartLine />
-                            </a>
                           </div>
                         </div>
                       </div>
@@ -92,9 +80,6 @@ const WishlistContent = ({ embedded = false }) => {
                       <div className="icon-box d-flex gap-2 justify-content-center">
                         <a href={Href} className="icon " onClick={() => removeFromWishlist(product)}>
                           <RiCloseLine />
-                        </a>
-                        <a href={Href} className="cart" onClick={() => addToCart(product)}>
-                          <RiShoppingCartLine />
                         </a>
                       </div>
                     </td>

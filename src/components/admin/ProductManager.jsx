@@ -1,5 +1,6 @@
 "use client";
 
+import VariantPricingEditor from "@/components/admin/VariantPricingEditor";
 import ListPagination, { PAGE_SIZE } from "@/components/admin/ListPagination";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -31,6 +32,7 @@ const MAX_PRODUCT_IMAGES = 8;
 const EMPTY_FORM = {
   uuid: null,
   name: "",
+  design_code_uuid: "",
   category_uuid: "",
   category_uuids: [],
   attribute_value_uuids: [],
@@ -64,6 +66,7 @@ export default function ProductManager() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [attributes, setAttributes] = useState([]);
+  const [designCodes,setDesignCodes] = useState([]);
   const [form, setForm] = useState({ ...EMPTY_FORM, category_uuid: categoryFromUrl, category_uuids: categoryFromUrl ? [categoryFromUrl] : [] });
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -72,6 +75,7 @@ export default function ProductManager() {
   const [error, setError] = useState("");
   const [fileInputKey, setFileInputKey] = useState(0);
   const [formOpen, setFormOpen] = useState(false);
+  const [draftPriceGroups, setDraftPriceGroups] = useState(null);
 
   const categoryOptions = useMemo(() => flattenCategories(categories), [categories]);
   const selectedCategoryName = categoryOptions.find((item) => item.uuid === categoryFromUrl)?.name;
@@ -87,6 +91,8 @@ export default function ProductManager() {
     const response=await fetch("/api/admin/attributes",{cache:"no-store"});
     if(response.ok) setAttributes((await response.json()).data||[]);
   },[]);
+
+  const loadDesignCodes = useCallback(async()=>{const response=await fetch("/api/admin/design-codes");if(response.ok)setDesignCodes((await response.json()).data||[]);},[]);
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -106,8 +112,8 @@ export default function ProductManager() {
   }, [categoryFromUrl]);
 
   useEffect(() => {
-    Promise.all([loadCategories(), loadProducts(), loadAttributes()]).catch((err) => setError(err.message));
-  }, [loadCategories, loadProducts, loadAttributes]);
+    Promise.all([loadCategories(), loadProducts(), loadAttributes(),loadDesignCodes()]).catch((err) => setError(err.message));
+  }, [loadCategories, loadProducts, loadAttributes,loadDesignCodes]);
 
   useEffect(() => {
     if (!form.uuid && categoryFromUrl) {
@@ -128,6 +134,7 @@ export default function ProductManager() {
   const pagedProducts = visibleProducts.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const resetForm = () => {
+    setDraftPriceGroups(null);
     setForm({ ...EMPTY_FORM, category_uuid: categoryFromUrl, category_uuids: categoryFromUrl ? [categoryFromUrl] : [] });
     setFileInputKey((value) => value + 1);
   };
@@ -141,7 +148,8 @@ export default function ProductManager() {
     setError("");
     setForm({
       uuid: product.uuid || product.id,
-      name: product.name || "",
+      name: product.base_name || product.name || "",
+      design_code_uuid: product.design_code_uuid || "",
       category_uuid: product.category_uuid || product.categories?.[0]?.uuid || product.categories?.[0]?.id || "",
       category_uuids:(product.categories||[]).map((category)=>category.uuid||category.id),
       attribute_value_uuids:(product.attributes||[]).flatMap((attribute)=>attribute.values.map((value)=>value.uuid)),
@@ -215,6 +223,7 @@ export default function ProductManager() {
       const editing = Boolean(form.uuid);
       const payload = new FormData();
       payload.append("name", form.name);
+      payload.append("design_code_uuid",form.design_code_uuid);
       payload.append("category_uuid", form.category_uuids[0] || "");
       form.category_uuids.forEach((id)=>payload.append("category_uuids",id));
       // Explicit empty arrays require a marker to clear all attributes when editing.
@@ -232,9 +241,27 @@ export default function ProductManager() {
         method: editing ? "PATCH" : "POST",
         body: payload,
       });
-      const result = await response.json();
+      const contentType = response.headers.get("content-type") || "";
+      const result = contentType.includes("application/json") ? await response.json() : {message:`Product API returned HTTP ${response.status} instead of JSON. Check the Next.js terminal.`};
       if (!response.ok) throw new Error(result.message || "Failed to save product");
-      setMessage(editing ? "Product updated successfully" : "Product created successfully");
+      // Newly created products receive their assigned attributes in the POST above.
+      // Persist the dependent pricing immediately, without requiring a second edit.
+      if (draftPriceGroups !== null) {
+        const createdId = editing ? form.uuid : (result.data?.uuid || result.data?.id);
+        if (!createdId) throw new Error("Product saved, but its ID was not returned. Reload the product before saving price groups.");
+        const pricingResponse = await fetch(`/api/admin/product-variants/${createdId}`, {
+          method: "PUT", headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({groups: draftPriceGroups}),
+        });
+        const pricingResult = (pricingResponse.headers.get("content-type") || "").includes("application/json") ? await pricingResponse.json() : {message:`Pricing API returned HTTP ${pricingResponse.status} instead of JSON. Check the Next.js terminal.`};
+        if (!pricingResponse.ok) {
+          // The product already exists: keep its ID in the form to allow a safe retry.
+          setForm(value => ({...value, uuid: createdId}));
+          throw new Error(`Product saved, but variant pricing was not saved: ${pricingResult.message || "Unknown error"}. Retry in the price group editor.`);
+        }
+      }
+      setDraftPriceGroups(null);
+      setMessage(editing ? "Product and variant prices updated successfully" : "Product and variant prices created successfully");
       form.newImages.forEach((item) => item.preview?.startsWith("blob:") && URL.revokeObjectURL(item.preview));
       resetForm();
       setFormOpen(false);
@@ -337,6 +364,7 @@ export default function ProductManager() {
                   <input className="form-control" value={form.name} onChange={(e) => setForm((v) => ({ ...v, name: e.target.value }))} placeholder="Enter Product Name" required />
                 </div>
 
+                <div className="mb-4"><label className="form-label-title">Design Code</label><select className="form-control" value={form.design_code_uuid} onChange={event=>setForm(value=>({...value,design_code_uuid:event.target.value}))}><option value="">No design code</option>{designCodes.map(item=><option key={item.uuid} value={item.uuid}>{item.code}</option>)}</select><small><a href="/admin/design-codes" target="_blank" rel="noreferrer">Manage design codes</a></small></div>
                 <div className="mb-4">
                   <MultiDropdown title="Categories" required placeholder="Choose categories and subcategories"
                     selected={form.category_uuids}
@@ -353,6 +381,11 @@ export default function ProductManager() {
                     onClear={()=>setForm(v=>({...v,attribute_value_uuids:[]}))}/>
                   {!attributes.length && <a href="/admin/attributes">Create attributes first</a>}
                 </div>
+                {!form.uuid && form.attribute_value_uuids.length>0 && <VariantPricingEditor
+                  assignedAttributes={attributes.map(a=>({...a,values:a.values.filter(v=>form.attribute_value_uuids.includes(v.uuid))})).filter(a=>a.values.length)}
+                  draftGroups={draftPriceGroups} onDraftChange={setDraftPriceGroups}
+                />}
+                {form.uuid && <VariantPricingEditor key={form.uuid} productId={form.uuid} draftGroups={draftPriceGroups} onDraftChange={setDraftPriceGroups} assignedAttributes={attributes.map(a=>({...a,values:a.values.filter(v=>form.attribute_value_uuids.includes(v.uuid))})).filter(a=>a.values.length)} />}
                 <div className="row">
                   <div className="col-md-6 mb-4"><label className="form-label-title">Price <span className="text-danger">*</span></label><input type="number" min="0" step="0.01" className="form-control" value={form.price} onChange={(e) => setForm((v) => ({ ...v, price: e.target.value }))} required /></div>
                   <div className="col-md-6 mb-4"><label className="form-label-title">Sale Price</label><input type="number" min="0" step="0.01" className="form-control" value={form.sale_price} onChange={(e) => setForm((v) => ({ ...v, sale_price: e.target.value }))} /></div>

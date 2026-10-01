@@ -8,7 +8,9 @@ const HomeHeroCarousel = ({ banners = [] }) => {
   const canSlide = banners.length > 1;
 
   return (
-    <div className="nk-home-hero-carousel" aria-label="Homepage banners">
+    <>
+    <div className="nk-mobile-static-hero"><img src="/assets/images/banners/mobile_banner.jpeg" alt="Nammakadai mobile banner" width={768} height={768} fetchPriority="high" /></div>
+    <div className="nk-home-hero-carousel nk-desktop-hero" aria-label="Homepage banners">
       <Slider
         dots={canSlide}
         arrows={canSlide}
@@ -25,18 +27,29 @@ const HomeHeroCarousel = ({ banners = [] }) => {
       >
         {banners.map((banner, index) => (
           <div className="nk-home-hero-slide" key={banner.src}>
-            <img
+            <picture>
+              <img
               src={banner.src}
               alt={banner.alt || `Banner ${index + 1}`}
               width={1376}
               height={412}
               loading={index === 0 ? "eager" : "lazy"}
               fetchPriority={index === 0 ? "high" : "auto"}
-            />
+              />
+            </picture>
           </div>
         ))}
       </Slider>
     </div>
+    <style jsx>{`
+      .nk-mobile-static-hero { display: none; }
+      @media (max-width: 767px) {
+        .nk-mobile-static-hero { display: block; width: 100%; }
+        .nk-mobile-static-hero img { display: block; width: 100%; height: auto; }
+        .nk-desktop-hero { display: none; }
+      }
+    `}</style>
+    </>
   );
 };
 

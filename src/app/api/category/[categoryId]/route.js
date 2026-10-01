@@ -59,6 +59,12 @@ const updateCategory = async (request, params) => {
       data.name = name;
     }
 
+    if (body.priority !== undefined) {
+      const priority = Number(body.priority);
+      if (!Number.isSafeInteger(priority) || priority < 0) return errorResponse("Priority must be a non-negative whole number", 422);
+      data.priority = priority;
+    }
+
     if (body.status !== undefined) {
       const status = parseStatus(body.status);
       if (status === undefined) return errorResponse("Invalid category status", 422);

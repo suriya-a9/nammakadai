@@ -15,7 +15,7 @@ const ProductBox9 = ({ productState, setProductState }) => {
   const { convertCurrency } = useContext(SettingContext);
   return (
     <>
-      <div className={`basic-product theme-product-8 ${productState?.product?.stock_status === "out-of-stock" ? "sold-out" : ""}`}>
+      <div className="basic-product theme-product-8">
         <div className="img-wrapper">
           <Link href={`/product/${productState?.product?.slug}`} className="img-fluid lazyload bg-img bg-top">
             <img  src={productState?.selectedVariation?.variation_image ? productState?.selectedVariation.variation_image.original_url : productState?.product?.product_thumbnail?.original_url} className="img-fluid bg-img" alt="product-image" />

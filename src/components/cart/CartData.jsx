@@ -35,8 +35,8 @@ const CartData = ({ elem }) => {
           </Col>
           <Col className="table-price">
             <h2 className="td-color">
-              {convertCurrency(elem?.product?.sale_price)}
-              {elem?.product?.discount || elem?.product?.discount ? <del className="text-content">{convertCurrency(elem?.product?.price)}</del> : null}
+              {convertCurrency(elem?.unit_price ?? elem?.product?.sale_price)}
+              {Number(elem?.regular_price ?? elem?.product?.price) > Number(elem?.unit_price ?? elem?.product?.sale_price) ? <del className="text-content">{convertCurrency(elem?.regular_price ?? elem?.product?.price)}</del> : null}
             </h2>
           </Col>
           <Col>
@@ -48,12 +48,12 @@ const CartData = ({ elem }) => {
       </td>
       <td className="table-price">
         <h2>
-          {convertCurrency(elem?.product?.sale_price)}
-          {elem?.product?.discount || elem?.product?.discount ? <del className="text-content">{convertCurrency(elem?.product?.price)}</del> : null}
+          {convertCurrency(elem?.unit_price ?? elem?.product?.sale_price)}
+          {Number(elem?.regular_price ?? elem?.product?.price) > Number(elem?.unit_price ?? elem?.product?.sale_price) ? <del className="text-content">{convertCurrency(elem?.regular_price ?? elem?.product?.price)}</del> : null}
         </h2>
-        {elem?.product?.price - elem?.product?.sale_price != 0 || elem?.product?.price - elem?.product?.sale_price < 0 ? (
+        {Number(elem?.regular_price ?? elem?.product?.price) > Number(elem?.unit_price ?? elem?.product?.sale_price) ? (
           <h6 className="theme-color">
-            {t("YouSave")}: {convertCurrency(Math.abs(elem?.product?.price - elem?.product?.sale_price).toFixed(2))}
+            {t("YouSave")}: {convertCurrency((Number(elem?.regular_price ?? elem?.product?.price) - Number(elem?.unit_price ?? elem?.product?.sale_price)).toFixed(2))}
           </h6>
         ) : null}
       </td>

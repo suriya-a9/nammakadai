@@ -1,6 +1,5 @@
 import ThemeOptionContext from "@/context/themeOptionsContext";
 import Btn from "@/elements/buttons/Btn";
-import { storageURL } from "@/utils/constants";
 import { useCustomSearchParams } from "@/utils/hooks/useCustomSearchParams";
 import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -39,9 +38,9 @@ const MainCollection = ({ filter, setFilter, isBanner, isOffcanvas, classicStore
       <div className="page-main-content">
         <Row>
           <Col xs="12">
-            {isBanner && themeOption?.collection?.collection_banner_image_url && (
+            {isBanner && (
               <div className="top-banner-wrapper">
-                <OfferBanner classes={{ customHoverClass: "banner-contain hover-effect mb-4" }} imgUrl={storageURL + themeOption?.collection?.collection_banner_image_url} />{" "}
+                <OfferBanner classes={{ customHoverClass: "banner-contain hover-effect mb-4" }} imgUrl="/assets/images/banners/category_banner.jpeg" />{" "}
               </div>
             )}
             <div className="collection-product-wrapper">

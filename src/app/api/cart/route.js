@@ -3,13 +3,14 @@ import prisma from "@/lib/prisma";
 import { customerFromRequest } from "@/lib/customerAuth";
 import { isUuid, serializeProduct } from "@/lib/product";
 import { validateSelection, keyFor } from "@/lib/cartAttributes";
+import { priceForSelection } from "@/lib/variantPricing";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const reply = (message,status=422) => NextResponse.json({message},{status});
 async function auth(request){const c=await customerFromRequest(request);return c && (!request.headers.get("x-cart-customer") || request.headers.get("x-cart-customer")===c.uuid) ? c : null;}
 async function loadCart(id){
  const rows=await prisma.customerCartItem.findMany({where:{customerUuid:id},include:{product:{include:{category:true,images:{orderBy:{sortOrder:"asc"}},reviews:{include:{customer:{select:{uuid:true,name:true}}},orderBy:{createdAt:"desc"}}}}},orderBy:{createdAt:"asc"}});
- const data=rows.map(r=>{const product=serializeProduct(r.product);return {id:r.uuid,product_id:r.productUuid,selection_key:r.selectionKey,selected_attributes:r.selectedAttributes,variation_id:null,variation:null,product,quantity:r.quantity,sub_total:Math.round(Number(product.sale_price??product.price)*r.quantity*100)/100};});
+ const data=await Promise.all(rows.map(async r=>{const product=serializeProduct(r.product);const pricing=await priceForSelection(prisma,r.product,r.selectedAttributes);const pricedProduct={...product,price:pricing.regularPrice,sale_price:pricing.price,discount:pricing.regularPrice>pricing.price?Math.round((pricing.regularPrice-pricing.price)/pricing.regularPrice*100):0};return {id:r.uuid,product_id:r.productUuid,selection_key:r.selectionKey,selected_attributes:r.selectedAttributes,variation_id:pricing.variantUuid,variation:null,product:pricedProduct,quantity:r.quantity,unit_price:pricing.price,regular_price:pricing.regularPrice,sub_total:Math.round(pricing.price*r.quantity*100)/100};}));
  return NextResponse.json({data,items:data,total:data.reduce((n,i)=>n+i.sub_total,0)},{headers:{"Cache-Control":"no-store"}});
 }
 async function entries(db,raw){

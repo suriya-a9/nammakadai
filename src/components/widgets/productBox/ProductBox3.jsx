@@ -13,7 +13,7 @@ const ProductBox3 = ({ productState, setProductState }) => {
   const { t } = useTranslation("common");
   return (
     <>
-      <div className={`basic-product theme-product-2 ${productState?.product?.stock_status === "out_of_stock" ? "sold-out" : ""}`}>
+      <div className={`basic-product theme-product-2`}>
         <div className="product-detail mt-0">
           <Link className="product-title" href={`/product/${productState?.product?.slug}`}>
             {productState?.selectedVariation ? productState?.selectedVariation.name : productState?.product?.name}

@@ -13,7 +13,7 @@ const ProductBox11 = ({ productState, setProductState }) => {
   const { t } = useTranslation("common");
   return (
     <>
-      <div className={`basic-product theme-product-10 ${productState?.selectedVariation ? (productState?.selectedVariation.stock_status === "out_of_stock" || !productState?.selectedVariation.status ? "sold-out" : "") : productState?.product?.stock_status === "out_of_stock" ? "sold-out" : ""}`}>
+      <div className={`basic-product theme-product-10`}>
         <div className="img-wrapper">
           <ImageVariant thumbnail={productState.selectedVariation?.variation_image ? productState.selectedVariation.variation_image : productState.product?.product_thumbnail} gallery_images={productState.product?.product_galleries} product={productState.product} width={750} height={750} />
           <CartButton productState={productState} selectedVariation={productState.selectedVariation} text="Add to cart" classes="addto-cart-bottom" />
