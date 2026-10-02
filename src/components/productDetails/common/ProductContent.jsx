@@ -4,7 +4,7 @@ import SettingContext from "@/context/settingContext";
 import ThemeOptionContext from "@/context/themeOptionsContext";
 import { Href } from "@/utils/constants";
 import { useRouter } from "next/navigation";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RiRulerLine } from "react-icons/ri";
 import AddToCartButton from "./AddToCartButton";
@@ -18,8 +18,13 @@ const ProductContent = ({ productState, setProductState, productAccordion, noDet
   const { convertCurrency } = useContext(SettingContext);
   const { setCartCanvas } = useContext(ThemeOptionContext);
   const router = useRouter();
-  const [selectedAttributes, setSelectedAttributes] = useState({});
-  useEffect(()=>setSelectedAttributes({}),[productState?.product?.uuid]);
+  // Keep the selection in the parent so split layouts show the same live price.
+  const selectedAttributes = productState?.selectedAttributeValues || {};
+  const setSelectedAttributes = updater => setProductState(previous => ({
+    ...previous,
+    selectedAttributeValues: typeof updater === "function"
+      ? updater(previous.selectedAttributeValues || {}) : updater,
+  }));
   const assigned = productState?.product?.attributes || [];
   const selection = assigned.map(a=>({attribute_uuid:a.uuid,name:a.name,value_uuid:selectedAttributes[a.uuid],value:a.values.find(v=>v.uuid===selectedAttributes[a.uuid])?.value})).filter(a=>a.value_uuid);
   const options = productState?.product?.variant_options || [];
@@ -130,7 +135,24 @@ const ProductContent = ({ productState, setProductState, productAccordion, noDet
               </select>
             </div>)}
           </div>}
-          {options.length>0 && !exactOption && selection.length===assigned.length && <small className="text-danger d-block mb-3">This combination is unavailable. Choose another measurement.</small>}
+          {/* {options.length > 0 && selection.length > 0 && (
+            <div aria-live="polite" style={{background:"#fff7ee",border:"1px solid #f1dcc9",borderRadius:10,padding:"12px 14px",marginBottom:16}}>
+              {displayedPrice !== null ? (
+                <>
+                  <div style={{fontSize:12,color:"#795d52",marginBottom:4}}>
+                    {exactOption ? "Price for your selection" : sharedPrice ? "Price for selected options" : "Starting price for matching options"}
+                  </div>
+                  <strong style={{fontSize:22,color:"#800a1d"}}>{convertCurrency(displayedPrice)}</strong>
+                  {regularPrice !== null && displayedPrice < regularPrice && (
+                    <del style={{marginLeft:10,color:"#786e6e"}}>{convertCurrency(regularPrice)}</del>
+                  )}
+                  {exactOption && exactOption.price_group && (
+                    <div style={{fontSize:12,color:"#795d52",marginTop:4}}>{exactOption.price_group}</div>
+                  )}
+                </>
+              ) : <span style={{color:"#a21d28"}}>This combination is unavailable. Choose another measurement.</span>}
+            </div>
+          )} */}
           {productState?.product.status && !productAccordion && <>{productState?.product?.type == "classified" && <ProductAttribute productState={productState} setProductState={setProductState} />}</>}
         </>
       )}

@@ -45,7 +45,7 @@ const ProductDetailContent = ({ params }) => {
   useEffect(() => {
     if (ProductData) {
       (ProductData?.cross_sell_products?.length > 0 || ProductData?.related_products?.length > 0) && setGetProductIds({ ids: Array.from(new Set([...ProductData?.cross_sell_products, ...ProductData?.related_products])).join(",") });
-      setProductState((current) => ({ ...current, product: ProductData }));
+      setProductState((current) => ({ ...current, product: ProductData, selectedAttributeValues: {} }));
     }
   }, [ProductData, setGetProductIds]);
 
