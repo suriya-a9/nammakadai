@@ -122,7 +122,7 @@ export const serializeProduct = (product) => {
     sale_starts_at: null,
     sale_expired_at: null,
     sku: product.uuid.slice(0, 8).toUpperCase(),
-    stock_status: product.quantity > 0 ? "in_stock" : "out_of_stock",
+    stock_status: "in_stock",
     status: product.status ? 1 : 0,
     product_type: "simple",
     created_at: product.createdAt,

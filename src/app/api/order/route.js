@@ -6,7 +6,7 @@ import { isUuid } from "@/lib/product";
 import { validateSelection } from "@/lib/cartAttributes";
 import { priceForSelection } from "@/lib/variantPricing";
 import { sendNewOrderAdminEmail } from "@/lib/orderEmail";
-import { sendOrderConfirmationWhatsApp } from "@/lib/whatsapp";
+import { sendOrderConfirmationWhatsApp, sendAdminNewOrderWhatsApp } from "@/lib/whatsapp";
 export const runtime="nodejs";export const dynamic="force-dynamic";
 const invalid=(message,status=422)=>NextResponse.json({message},{status});
 const serialize=(o)=>({id:o.uuid,uuid:o.uuid,order_number:o.orderNumber,created_at:o.createdAt,total:Number(o.total),subtotal:Number(o.subtotal),status:o.status,payment_status:o.paymentStatus,payment_method:o.paymentMethod,shipping_address:{name:o.name,phone:o.phone,address:o.address,city:o.city,state:o.state,pincode:o.pincode},items:o.items?.map(i=>({name:i.productName,quantity:i.quantity,price:Number(i.unitPrice),total:Number(i.lineTotal),selected_attributes:i.selectedAttributes||[]}))});
@@ -51,7 +51,11 @@ export async function POST(request){
     if(products.length!==new Set(items.map(i=>i.id)).size)throw new Error("One or more products are no longer available");
     const byId=new Map(products.map(p=>[p.uuid,p]));let subtotal=0;
     const lines=[];for(const item of items){const p=byId.get(item.id);const pricing=await priceForSelection(tx,p,item.verifiedAttributes);const price=pricing.price;if(!Number.isFinite(price)||price<0)throw new Error("Invalid product price");subtotal+=Math.round(price*100)*item.quantity;lines.push({productUuid:p.uuid,productName:p.name,quantity:item.quantity,unitPrice:price,lineTotal:Math.round(price*100)*item.quantity/100,selectedAttributes:item.verifiedAttributes||[]});}
-    for(const [id,qty] of [...new Set(items.map(i=>i.id))].map(id=>[id,items.filter(i=>i.id===id).reduce((n,i)=>n+i.quantity,0)])){const result=await tx.product.updateMany({where:{uuid:id,status:true,quantity:{gte:qty}},data:{quantity:{decrement:qty}}});if(result.count!==1)throw new Error("A product is out of stock or quantity changed. Please update your cart.");}
+    for(const id of new Set(items.map(i=>i.id))){
+      const qty=items.filter(i=>i.id===id).reduce((sum,i)=>sum+i.quantity,0);
+      const decremented=await tx.product.updateMany({where:{uuid:id,quantity:{gte:qty}},data:{quantity:{decrement:qty}}});
+      if(!decremented.count)await tx.product.updateMany({where:{uuid:id},data:{quantity:0}});
+    }
     const placedOrder = await tx.order.create({data:{orderNumber:`NK-${Date.now()}-${randomUUID().slice(0,8).toUpperCase()}`,customerUuid:customer.uuid,name,phone,address,city,state,pincode,notes:String(b.notes||"").trim().slice(0,1000)||null,subtotal:subtotal/100,total:subtotal/100,items:{create:lines}},include:{items:true}});
     // Remove purchased items in the SAME transaction as order creation and stock adjustment.
     const cleared = await tx.customerCartItem.deleteMany({where:{customerUuid:customer.uuid}});
@@ -60,6 +64,7 @@ export async function POST(request){
   });
   try { await sendNewOrderAdminEmail(order); } catch (mailError) { console.error("admin order email", mailError); }
   try { await sendOrderConfirmationWhatsApp(customer.phone || order.phone, order); } catch (whatsAppError) { console.error("customer WhatsApp order confirmation", whatsAppError); }
+  try { await sendAdminNewOrderWhatsApp(order); } catch (whatsAppError) { console.error("admin WhatsApp new order", whatsAppError); }
   return NextResponse.json({message:"Order placed successfully",data:serialize(order)},{status:201});
  }catch(e){if(e?.message?.includes("stock")||e?.message?.includes("available")||e?.message?.includes("price")||e?.message?.includes("cart changed")||e?.message?.includes("attributes changed")||e?.message?.includes("combination is unavailable"))return invalid(e.message,409);console.error("place order",e);return invalid("Unable to place order. Please try again.",500);}
 }

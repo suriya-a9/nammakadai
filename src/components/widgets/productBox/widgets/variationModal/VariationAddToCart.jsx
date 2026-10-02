@@ -10,7 +10,7 @@ const VariationAddToCart = ({ cloneVariation, setVariationModal }) => {
   const { cartCanvas, setCartCanvas } = useContext(ThemeOptionContext);
   const { t } = useTranslation("common");
   const { handleIncDec, isLoading } = useContext(CartContext);
-  const productInStock = cloneVariation?.selectedVariation ? cloneVariation?.selectedVariation?.stock_status == "in_stock" : cloneVariation?.product?.stock_status == "in_stock";
+  const productInStock = true;
   const router = useRouter();
 
   const addToCart = (allProduct) => {
@@ -25,11 +25,11 @@ const VariationAddToCart = ({ cloneVariation, setVariationModal }) => {
 
   return (
     <div className="product-buy-btn-group">
-      <Btn className="btn-animation btn-solid hover-solid scroll-button buy-button" disabled={(cloneVariation?.selectedVariation && cloneVariation?.selectedVariation?.stock_status !== "in_stock") || (cloneVariation?.product?.stock_status !== "in_stock" && true)} onClick={addToCart} loading={isLoading}>
+      <Btn className="btn-animation btn-solid hover-solid scroll-button buy-button" disabled={cloneVariation?.product?.status === 0} onClick={addToCart} loading={isLoading}>
         <RiShoppingCartLine className="me-2" />
-        <span>{productInStock ? t("AddToCart") : t("SoldOut")}</span>
+        <span>{t("AddToCart")}</span>
       </Btn>
-      <Btn className="btn-solid buy-button" onClick={() => buyNow(cloneVariation)} disabled={cloneVariation?.product?.status === 0 || cloneVariation?.product?.stock_status == "out_of_stock" || cloneVariation?.product?.quantity < cloneVariation?.productQty ? true : false} loading={Number(isLoading)}>
+      <Btn className="btn-solid buy-button" onClick={() => buyNow(cloneVariation)} disabled={cloneVariation?.product?.status === 0} loading={Number(isLoading)}>
         {t("BuyNow")}
       </Btn>
     </div>

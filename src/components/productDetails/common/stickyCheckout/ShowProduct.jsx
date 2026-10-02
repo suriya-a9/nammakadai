@@ -22,7 +22,6 @@ const ShowProduct = ({ productState, setProductState }) => {
     if (productState?.selectedVariation) {
       setProductState((prevState) => {
         const tempSelectedVariation = { ...prevState.selectedVariation };
-        tempSelectedVariation.stock_status = tempSelectedVariation.quantity < prevState.productQty ? "out_of_stock" : "in_stock";
         return {
           ...prevState,
           selectedVariation: tempSelectedVariation,
@@ -31,7 +30,6 @@ const ShowProduct = ({ productState, setProductState }) => {
     } else {
       setProductState((prevState) => {
         const tempProduct = { ...prevState.product };
-        tempProduct.stock_status = tempProduct.quantity < prevState.productQty ? "out_of_stock" : "in_stock";
         return {
           ...prevState,
           product: tempProduct,

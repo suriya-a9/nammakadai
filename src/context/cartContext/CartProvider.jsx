@@ -229,9 +229,7 @@ const CartProvider = ({ children }) => {
     const requested = {product_id:id,selected_attributes:selections};
     const existing = itemsRef.current.find(item=>identity(item)===identity(requested));
     const quantity = (existing?.quantity || 0) + change;
-    const totalOther = itemsRef.current.filter(item=>item.product_id===id && identity(item)!==identity(requested)).reduce((n,item)=>n+item.quantity,0);
-    const stock = Number(productObj?.quantity ?? existing?.product?.quantity ?? 0);
-    if (quantity+totalOther > stock || quantity>100) { ToastNotification("error", `Only ${stock} items in stock`); return false; }
+    if (quantity > 100) { ToastNotification("error", "Maximum quantity is 100"); return false; }
     const product = productObj || existing?.product;
     const next = quantity <= 0
       ? itemsRef.current.filter(item=>identity(item)!==identity(requested))

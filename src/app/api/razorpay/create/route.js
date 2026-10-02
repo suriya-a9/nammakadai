@@ -19,7 +19,6 @@ export async function POST(request){
   const products=await prisma.product.findMany({where:{uuid:{in:cart.map(item=>item.productUuid)},status:true},select:{uuid:true,name:true,quantity:true,price:true,salePrice:true}});
   const map=new Map(products.map(item=>[item.uuid,item]));const totals=new Map();const lines=[];let totalPaise=0;
   for(const item of cart){const product=map.get(item.productUuid);if(!product)throw new Error("Product unavailable");totals.set(product.uuid,(totals.get(product.uuid)||0)+item.quantity);const attrs=await validateSelection(prisma,product.uuid,item.selectedAttributes||[]);const price=(await priceForSelection(prisma,product,attrs)).price;const paise=Math.round(price*100);if(!Number.isSafeInteger(paise)||paise<1)throw new Error("Invalid price");totalPaise+=paise*item.quantity;lines.push({productUuid:product.uuid,productName:product.name,quantity:item.quantity,unitPrice:price,lineTotal:paise*item.quantity/100,selectedAttributes:attrs});}
-  for(const [id,qty] of totals)if(map.get(id).quantity<qty)throw new Error(`${map.get(id).name} has insufficient stock`);
   if(!Number.isSafeInteger(totalPaise)||totalPaise<100)throw new Error("Invalid order total");
   const number=`NK-${Date.now()}-${randomUUID().slice(0,8).toUpperCase()}`;
   const remote=await razorpay("orders",{method:"POST",body:JSON.stringify({amount:totalPaise,currency:"INR",receipt:number,notes:{customer:customer.uuid}})});

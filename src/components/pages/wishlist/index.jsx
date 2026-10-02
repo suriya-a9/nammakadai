@@ -51,7 +51,7 @@ const WishlistContent = ({ embedded = false }) => {
                       <Link href={`/product/${product?.slug}`}>{product?.name}</Link>
                       <div className="mobile-cart-content row">
                         <div className="col">
-                          <p>{product?.stock_status?.replaceAll("_", " ")}</p>
+                          
                         </div>
                         <div className="col">
                           <h2>
@@ -73,7 +73,7 @@ const WishlistContent = ({ embedded = false }) => {
                       </h2>
                     </td>
                     <td>
-                      <p>{product?.stock_status?.replaceAll("_", " ")}</p>
+                      
                     </td>
 
                     <td>

@@ -100,12 +100,6 @@ const ProductContent = ({ productState, setProductState, productAccordion, noDet
             </h3>
             <span>{t("InclusiveAllTheTax")}</span>
           </div>
-          {Number(productState?.product?.quantity) > 0 && Number(productState?.product?.quantity) < 5 && (
-            <div className="product-low-stock-notice">
-              <strong>Hurry! Only {productState.product.quantity} left in stock</strong>
-              <span>Limited stock available. Order soon.</span>
-            </div>
-          )}
           {productState?.product.short_description && <p className="description-text">{productState?.product.short_description}</p>}
         </>
       )}

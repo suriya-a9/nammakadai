@@ -7,17 +7,15 @@ import AccountContext from "@/context/accountContext";
 import { usePathname } from "next/navigation";
 import NextTopLoader from "nextjs-toploader";
 import { useContext, useEffect, useState } from "react";
-import ExitModal from "./exitModal";
 import Footers from "./footer";
 import Headers from "./header";
 import MobileMenu from "./header/widgets/MobileMenu";
-import NewsLetterModal from "./newsLetterModal";
+import GoogleReviewsPopup from "./googleReviewsPopup";
 import StorefrontMotion from "@/components/storefront/StorefrontMotion";
 
 const SubLayout = ({ children }) => {
   const isTabActive = TabFocusChecker();
   const { themeOption, setOpenAuthModal } = useContext(ThemeOptionContext);
-  const [makeExitActive, setMakeExitActive] = useState(false);
   const pathName = usePathname();
   const disableMetaTitle = ["product", "blogs", "brand"];
   const { accountData, authLoading } = useContext(AccountContext);
@@ -95,8 +93,7 @@ const SubLayout = ({ children }) => {
       <AuthModal />
       <Footers />
       <NextTopLoader showSpinner={false} />
-      {themeOption?.popup?.news_letter?.is_enable && <NewsLetterModal setMakeExitActive={setMakeExitActive} />}
-      {themeOption?.popup?.exit?.is_enable && makeExitActive && <ExitModal dataApi={themeOption?.popup?.exit} headerLogo={themeOption?.logo?.header_logo?.original_url} />}
+      {pathName === "/" && <GoogleReviewsPopup />}
     </>
   );
 };

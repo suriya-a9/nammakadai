@@ -75,3 +75,17 @@ export const sendOrderStatusWhatsApp = (phone, order) =>
     order.name || "Customer", order.orderNumber,
     statusSentence[String(order.status || "").toLowerCase()] || `Your order status is ${String(order.status || "updated")}.`
   ], process.env.WHATSAPP_STATUS_LANGUAGE);
+
+// Separate approved Utility template for admin order notifications.
+// Body variables: {{1}} customer name, {{2}} order number, {{3}} order total.
+export const sendAdminNewOrderWhatsApp = order =>
+  sendTemplate(
+    process.env.WHATSAPP_ADMIN_PHONE || "916382580462",
+    process.env.WHATSAPP_ADMIN_ORDER_TEMPLATE || "nammakadai_admin_new_order",
+    [
+      String(order.phone || order.customer?.phone || "Not provided"),
+      order.orderNumber,
+      Number(order.total).toFixed(2)
+    ],
+    process.env.WHATSAPP_ADMIN_ORDER_LANGUAGE || "en"
+  );

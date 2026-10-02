@@ -76,7 +76,6 @@ const ProductBoxVariantAttribute = ({ productState, setProductState, productBox1
     if (productState?.selectedVariation) {
       setProductState((prevState) => {
         const tempSelectedVariation = { ...prevState.selectedVariation };
-        tempSelectedVariation.stock_status = tempSelectedVariation.quantity < prevState.productQty ? "out_of_stock" : "in_stock";
         return {
           ...prevState,
           selectedVariation: tempSelectedVariation,
@@ -85,7 +84,6 @@ const ProductBoxVariantAttribute = ({ productState, setProductState, productBox1
     } else {
       setProductState((prevState) => {
         const tempProduct = { ...prevState.product };
-        tempProduct.stock_status = tempProduct.quantity < prevState.productQty ? "out_of_stock" : "in_stock";
         return {
           ...prevState,
           product: tempProduct,
@@ -172,7 +170,7 @@ const ProductBoxVariantAttribute = ({ productState, setProductState, productBox1
         checkStockAvailable();
       }
 
-      if (variation?.stock_status === "out_of_stock") {
+      if (false) {
         variation?.attribute_values.filter((attr_value) => {
           if (attrValues.some((value) => tempVariantIds.includes(value))) {
             if (attrValues.every((value) => tempVariantIds.includes(value))) {

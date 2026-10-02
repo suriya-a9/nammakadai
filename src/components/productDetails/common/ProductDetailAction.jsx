@@ -32,7 +32,6 @@ const ProductDetailAction = ({ productState, setProductState, extraOption, isDis
     if (productState?.selectedVariation) {
       setProductState((prevState) => {
         const tempSelectedVariation = { ...prevState.selectedVariation };
-        tempSelectedVariation.stock_status = tempSelectedVariation.quantity < prevState.productQty ? "out_of_stock" : "in_stock";
         return {
           ...prevState,
           selectedVariation: tempSelectedVariation,
@@ -41,7 +40,6 @@ const ProductDetailAction = ({ productState, setProductState, extraOption, isDis
     } else {
       setProductState((prevState) => {
         const tempProduct = { ...prevState.product };
-        tempProduct.stock_status = tempProduct.quantity < prevState.productQty ? "out_of_stock" : "in_stock";
         return {
           ...prevState,
           product: tempProduct,

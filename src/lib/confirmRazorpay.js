@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { razorpay } from "@/lib/razorpay";
 import { sendNewOrderAdminEmail } from "@/lib/orderEmail";
-import { sendOrderConfirmationWhatsApp } from "@/lib/whatsapp";
+import { sendOrderConfirmationWhatsApp, sendAdminNewOrderWhatsApp } from "@/lib/whatsapp";
 export async function confirmRazorpay(razorpayOrderId,paymentId){
  const payment=await razorpay(`payments/${encodeURIComponent(paymentId)}`);
  if(payment.order_id!==razorpayOrderId||payment.status!=="captured"||payment.currency!=="INR")throw new Error("Payment has not been captured");
@@ -13,11 +13,14 @@ export async function confirmRazorpay(razorpayOrderId,paymentId){
   const changed=await tx.order.updateMany({where:{uuid:order.uuid,paymentStatus:"pending"},data:{paymentStatus:"processing"}});
   if(changed.count!==1)throw new Error("Payment confirmation already in progress");
   const totals=new Map();for(const item of order.items)totals.set(item.productUuid,(totals.get(item.productUuid)||0)+item.quantity);
-  for(const [uuid,quantity] of totals){const updated=await tx.product.updateMany({where:{uuid,status:true,quantity:{gte:quantity}},data:{quantity:{decrement:quantity}}});if(updated.count!==1)throw new Error("Paid order needs manual fulfillment: insufficient stock");}
+  for(const [uuid,quantity] of totals){
+   const decremented=await tx.product.updateMany({where:{uuid,quantity:{gte:quantity}},data:{quantity:{decrement:quantity}}});
+   if(!decremented.count)await tx.product.updateMany({where:{uuid},data:{quantity:0}});
+  }
   const updated=await tx.order.update({where:{uuid:order.uuid},data:{paymentStatus:"paid",status:"placed",razorpayPaymentId:paymentId},include:{items:true}});
   for(const item of order.items)await tx.customerCartItem.deleteMany({where:{customerUuid:order.customerUuid,productUuid:item.productUuid,selectionKey:(item.selectedAttributes||[]).map(a=>a.value_uuid).sort().join(":")}});
   return {order:updated,changed:true};
  });
- if(result.changed){try{await sendNewOrderAdminEmail(result.order)}catch(error){console.error("admin email",error)}try{await sendOrderConfirmationWhatsApp(result.order.phone,result.order)}catch(error){console.error("WhatsApp",error)}}
+ if(result.changed){try{await sendNewOrderAdminEmail(result.order)}catch(error){console.error("admin email",error)}try{await sendOrderConfirmationWhatsApp(result.order.phone,result.order)}catch(error){console.error("WhatsApp",error)}try{await sendAdminNewOrderWhatsApp(result.order)}catch(error){console.error("admin WhatsApp",error)}}
  return result.order;
 }

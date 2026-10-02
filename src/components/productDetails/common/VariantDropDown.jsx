@@ -11,8 +11,8 @@ const VariantDropDown = ({ product, selectedOption }) => {
     }, [])
       // Select First Attribute
   const checkVariant = (item, i) =>{
-    if(item.stock_status == 'in_stock' && item.status){
-      if(item.stock_status === 'in_stock' && item.status && i === result.findIndex(obj => obj.value.stock_status === 'in_stock' && obj.value.status)){
+    if(item.status){
+      if(item.status && i === result.findIndex(obj => obj.value.status)){
         return true;
       }
     }
@@ -30,8 +30,8 @@ const VariantDropDown = ({ product, selectedOption }) => {
     
         // Selected Variation While Page Load
         selectVariations.forEach((item,i) => {
-          if(item.value.stock_status == 'in_stock' && !!item.value.status){
-            if(item.value.stock_status === 'in_stock' && !!item.value.status && i === selectVariations.findIndex(obj => obj.value.stock_status === 'in_stock' && obj.value.status)){
+          if(!!item.value.status){
+            if(!!item.value.status && i === selectVariations.findIndex(obj => obj.value.status)){
               if( item.value){
                 selectedOption(item.value)
               }
@@ -58,7 +58,7 @@ const VariantDropDown = ({ product, selectedOption }) => {
         </option>
             {result.map((item,i) => 
             <Fragment key={i}>
-              <option data={JSON.stringify(item.value)} value={checkVariant(item.value, i)} disabled={!item.value.status ||  item.value.stock_status === 'out_of_stock'}>
+              <option data={JSON.stringify(item.value)} value={checkVariant(item.value, i)} disabled={!item.value.status}>
                 {item?.label}
               </option>
           </Fragment>

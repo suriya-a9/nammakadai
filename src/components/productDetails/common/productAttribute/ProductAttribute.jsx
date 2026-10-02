@@ -41,7 +41,7 @@ const ProductAttribute = ({ productState, setProductState, stickyAddToCart, noHo
     let firstAvailableVariant = null;
 
     for (const variation of productObj?.variations) {
-      if (variation.stock_status !== "out_of_stock") {
+      if (variation.status !== 0) {
         firstAvailableVariant = variation;
         break;
       }
@@ -74,7 +74,6 @@ const ProductAttribute = ({ productState, setProductState, stickyAddToCart, noHo
     if (productState?.selectedVariation) {
       setProductState((prevState) => {
         const tempSelectedVariation = { ...prevState.selectedVariation };
-        tempSelectedVariation.stock_status = tempSelectedVariation.quantity < prevState.productQty ? "out_of_stock" : "in_stock";
         return {
           ...prevState,
           selectedVariation: tempSelectedVariation,
@@ -83,7 +82,6 @@ const ProductAttribute = ({ productState, setProductState, stickyAddToCart, noHo
     } else {
       setProductState((prevState) => {
         const tempProduct = { ...prevState.product };
-        tempProduct.stock_status = tempProduct.quantity < prevState.productQty ? "out_of_stock" : "in_stock";
         return {
           ...prevState,
           product: tempProduct,
@@ -141,7 +139,7 @@ const ProductAttribute = ({ productState, setProductState, stickyAddToCart, noHo
         checkStockAvailable();
       }
 
-      if (variation?.stock_status == "out_of_stock") {
+      if (false) {
         variation?.attribute_values.filter((attr_value) => {
           if (attrValues.some((value) => tempVariantIds.includes(value))) {
             if (attrValues.every((value) => tempVariantIds.includes(value))) {

@@ -48,7 +48,7 @@ const CartButton = ({ productState, text, classes, iconClass = true, quantity = 
         <>
           {quantity ? (
             <>
-              {productState?.product?.stock_status === "in_stock" ? (
+              {(
                 <button
                   id={`add-to-cart${productState?.product?.id}`}
                   className="add-button add_cart"
@@ -59,10 +59,6 @@ const CartButton = ({ productState, text, classes, iconClass = true, quantity = 
                   }}
                 >
                   {text}
-                </button>
-              ) : (
-                <button id={`add-to-cart${productState?.product?.id}`} className="add-button add_cart" disabled>
-                  {t("OutOfStock")}
                 </button>
               )}
 
@@ -96,7 +92,7 @@ const CartButton = ({ productState, text, classes, iconClass = true, quantity = 
                 </div>
               )}
             </>
-          ) : productState?.product?.stock_status == "in_stock" ? (
+          ) : (
             <Btn
               color="transparent"
               id={`add-to-cart'+${productState?.product?.id}`}
@@ -111,10 +107,6 @@ const CartButton = ({ productState, text, classes, iconClass = true, quantity = 
             >
               <i className="ri-shopping-cart-line"></i>
               <span> {!(productQty > 0) ? text : "Added"}</span>
-            </Btn>
-          ) : (
-            <Btn id={`out-of-stock'+${productState?.product?.id}`} className={classes ? classes : ""} disabled={true} iconClass={iconClass ? iconClass : <RiAddLine />}>
-              {text ? "Out of stock" : ""}
             </Btn>
           )}
         </>
